@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import styles from "./starryBackground.module.css";
+import styles from "./StarryBackground.module.css";
 
 export const StarryBackground = () => {
   useEffect(() => {

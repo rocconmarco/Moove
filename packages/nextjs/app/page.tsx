@@ -5,18 +5,24 @@ import { useAccount } from "wagmi";
 import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Address } from "~~/components/scaffold-eth";
 import Link from "next/link";
+import { ImageSlider } from "~~/components/ImageSlider";
 
 const Home: NextPage = () => {
   const { address: connectedAddress } = useAccount();
 
   return (
     <div className="relative min-h-screen w-full">
-      <div className="relative z-10 flex items-center flex-col flex-grow pt-[8rem]">
+      <div className="relative z-10 flex items-center flex-col flex-grow pt-6">
         <div className="px-5">
           <h1 className="text-center">
             <span className="block text-5xl mb-2 text-white shadow-inner">Get your pass to the future of</span>
             <span className="block text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-slate-200 to-gray-600 drop-shadow-[0_10px_8px_rgba(0,0,0,0.8)] pb-2">sustainable mobility</span>
           </h1>
+
+          <div>
+            <ImageSlider />
+          </div>
+
          {/*  <div className="flex justify-center items-center space-x-2 flex-col sm:flex-row">
             <p className="my-2 font-medium text-white">Connected Address:</p>
             <Address address={connectedAddress} />
