@@ -1,0 +1,40 @@
+.bg-stars {
+    width: 100%;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+    z-index: 0;
+}
+
+@keyframes pulseAndFall {
+    0% {
+        opacity: 0.2;
+        transform: translateY(0) scale(1);
+    }
+    25% {
+        opacity: 1;
+        transform: translateY(25vh) scale(1.5);
+    }
+    50% {
+        opacity: 0.2;
+        transform: translateY(50vh) scale(1);
+    }
+    75% {
+        opacity: 1;
+        transform: translateY(75vh) scale(1.5);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(100vh) scale(1);
+    }
+}
+
+.random-star {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: #c01afa;
+    border-radius: 50%;
+    filter: blur(0.5px);
+    animation: pulseAndFall var(--fall-duration) linear;
+}
