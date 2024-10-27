@@ -50,7 +50,7 @@ const Home: NextPage = () => {
         </div>
 
         <div className="flex space-x-96">
-          <div className="flex flex-col absolute left-[5%]">
+          <div className={`${styles.description} flex flex-col absolute left-[5%]`}>
             <h2>
               <span className="block text-5xl mb-2 text-white shadow-inner">Moove your way</span>
               <span className="block text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-slate-200 to-gray-600 drop-shadow-[0_10px_8px_rgba(0,0,0,0.8)] pb-2">
