@@ -1,0 +1,71 @@
+.title {
+  animation: appear 2s linear;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.images {
+  position: absolute;
+  right: 0;
+  left: 30;
+  width: 50%;
+  height: 40rem;
+  object-fit: cover;
+  border-radius: 15px; /* Bordi più arrotondati */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5), /* Ombra esterna */ 0 0 0 1px rgba(255, 255, 255, 0.1),
+    /* Bordo sottile */ inset 0 0 20px rgba(0, 0, 0, 0.2); /* Ombra interna */
+  background: rgba(255, 255, 255, 0.05); /* Leggero effetto vetro */
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at center, 
+      black 30%,
+      black 60%,
+      transparent 100%
+    ),
+    linear-gradient(to right, 
+      transparent, 
+      black 10%, 
+      black 100%, 
+      black 100%
+    ),
+    linear-gradient(to bottom, 
+      transparent, 
+      black 10%, 
+      black 90%, 
+      transparent
+    );
+  mask-image: radial-gradient(ellipse 70% 70% at center, 
+      black 30%,
+      black 60%,
+      transparent 100%
+    ),
+    linear-gradient(to right, 
+      transparent, 
+      black 10%, 
+      black 100%, 
+      black 100%
+    ),
+    linear-gradient(to bottom, 
+      transparent, 
+      black 10%, 
+      black 90%, 
+      transparent
+    );
+  -webkit-mask-composite: source-over;
+  mask-composite: intersect;
+}
+
+.images::before {
+  content: "";
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  border-radius: 15px;
+  pointer-events: none;
+}
