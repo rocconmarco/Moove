@@ -23,12 +23,12 @@ export const CardsFan = () => {
 
   return (
     <div className="h-screen flex items-center justify-center">
-      <div id="cards-container" className="relative w-72 h-96">
+      <div id="cards-container" className="relative w-72 h-[342px]">
         {indexesArray.map(index => (
           <div
             key={index}
             className={`absolute w-full h-full transition-all duration-1000 ease-out
-              bg-gradient-to-br from-purple-500 to-blue-500
+              bg-gradient-to-br from-darkPurple to-darkPink
               rounded-xl shadow-xl
               transform-gpu preserve-3d
               origin-bottom ${isVisible ? `translate-y-0 ${getRotation(index)}` : "translate-y-32 rotate-0"}`}
@@ -46,13 +46,13 @@ export const CardsFan = () => {
             }}
           >
             <div className="absolute inset-0 border-2 border-white/10 rounded-xl" />
-            <div
+            {<div
               className="absolute h-full w-2"
               style={{
                 transform: "rotateY(90deg) translateZ(143px) translateX(-1px)",
                 transformOrigin: "right",
               }}
-            />
+            />}
             <div
               className="absolute w-full h-2"
               style={{
@@ -60,9 +60,9 @@ export const CardsFan = () => {
                 transformOrigin: "bottom",
               }}
             />
-            <div className="p-6 text-white text-center">
-              <h3 className="text-xl font-bold mb-4">{getName(index)}</h3>
-              <div className="w-full h-40 bg-white/10 rounded-lg mb-4">
+            <div className="text-white text-center">
+              <h3 className="text-xl font-bold my-5">{getName(index)}</h3>
+              <div className="w-full h-full px-4">
                 <img src={`/nft-images/${getName(index)}.jpg`}></img>
               </div>
             </div>
