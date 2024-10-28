@@ -50,12 +50,12 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 15px;  /* Bordi più arrotondati */
+    border-radius: 15px;
     box-shadow: 
-        0 5px 15px rgba(0,0,0,0.5),  /* Ombra esterna */
-        0 0 0 1px rgba(255,255,255,0.1),  /* Bordo sottile */
-        inset 0 0 20px rgba(0,0,0,0.2);  /* Ombra interna */
-    background: rgba(255,255,255,0.05);  /* Leggero effetto vetro */
+        0 5px 15px rgba(0,0,0,0.5), 
+        0 0 0 1px rgba(255,255,255,0.1), 
+        inset 0 0 20px rgba(0,0,0,0.2);  
+    background: rgba(255,255,255,0.05);  
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
     border: 1px solid rgba(255,255,255,0.1);
@@ -65,7 +65,7 @@
 .banner .slider .item::before {
     content: '';
     position: absolute;
-    top: 40px;  /* Allineato con il margin-top dell'immagine */
+    top: 40px;  
     left: 0;
     right: 0;
     height: 100%;

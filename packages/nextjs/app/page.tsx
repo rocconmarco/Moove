@@ -7,6 +7,7 @@ import { useAccount } from "wagmi";
 import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { ImageSlider } from "~~/components/ImageSlider";
 import { Address } from "~~/components/scaffold-eth";
+import { CardsFan } from "~~/components/CardsFan";
 
 const Home: NextPage = () => {
   const { address: connectedAddress } = useAccount();
@@ -25,68 +26,66 @@ const Home: NextPage = () => {
           <div>
             <ImageSlider />
           </div>
-
-          {/*  <div className="flex justify-center items-center space-x-2 flex-col sm:flex-row">
-            <p className="my-2 font-medium text-white">Connected Address:</p>
-            <Address address={connectedAddress} />
-          </div> */}
-
-          {/* <p className="text-center text-lg text-white">
-            Get started by editing{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              packages/nextjs/app/page.tsx
-            </code>
-          </p> */}
-          {/* <p className="text-center text-lg text-white">
-            Edit your smart contract{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              YourContract.sol
-            </code>{" "}
-            in{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              packages/hardhat/contracts
-            </code>
-          </p> */}
         </div>
 
-        <div className="flex space-x-96">
-          <div className={`${styles.description} flex flex-col absolute left-[5%]`}>
+        <div className="flex w-full px-20 my-5 h-[600px]">
+          <div className={`${styles.description} opacity-0 flex flex-col w-1/2 pt-4`}>
             <h2>
               <span className="block text-5xl mb-2 text-white shadow-inner">Moove your way</span>
               <span className="block text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-slate-200 to-gray-600 drop-shadow-[0_10px_8px_rgba(0,0,0,0.8)] pb-2">
                 into the city
               </span>
             </h2>
-            <p className="text-white text-lg text-wrap w-[60%] mt-4">A mobility app that adapts to your day. Choose the best option for every moment and feel safe while going home.</p>
+            <p className="text-white text-lg mt-4">
+              A mobility app that adapts to your day. Choose the best option for every moment and feel safe while going
+              home.
+            </p>
           </div>
 
-          <img src="/3d-map/3d-map.jpg" className={`${styles.images}`} />
+          <div className="w-1/2 h-full">
+            <img src="/3d-map/3d-map.jpg" alt="3D Map" className={`${styles.images} w-full h-full object-cover opacity-0`} />
+          </div>
         </div>
 
-        {/* <div className="flex-grow bg-base-300 w-full mt-16 px-8 py-12">
-          <div className="flex justify-center items-center gap-12 flex-col sm:flex-row"> */}
-        {/* <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <BugAntIcon className="h-8 w-8 fill-secondary" />
-              <p>
-                Tinker with your smart contract using the{" "}
-                <Link href="/debug" passHref className="link">
-                  Debug Contracts
-                </Link>{" "}
-                tab.
-              </p>
-            </div> */}
-        {/* <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <MagnifyingGlassIcon className="h-8 w-8 fill-secondary" />
-              <p>
-                Explore your local transactions with the{" "}
-                <Link href="/blockexplorer" passHref className="link">
-                  Block Explorer
-                </Link>{" "}
-                tab.
-              </p>
-            </div> */}
-        {/* </div>
-        </div> */}
+
+        <div className="flex w-full px-20 my-40 h-[600px]">
+          <div className={`${styles.description} opacity-0 flex flex-col w-1/2 pt-4`}>
+            <h2>
+              <span className="block text-5xl mb-2 text-white shadow-inner">Reduce the emissions,</span>
+              <span className="block text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-slate-200 to-gray-600 drop-shadow-[0_10px_8px_rgba(0,0,0,0.8)] pb-2">
+                help the planet
+              </span>
+            </h2>
+            <p className="text-white text-lg mt-4">
+              Moove vehicles are 100% electric. Share your journey with a friend and you will be rewarded with a fee discount on your next ride. 
+            </p>
+          </div>
+
+          <div className="w-1/2 h-full">
+            <img src="/green-forest/green-forest.jpg" alt="Green Forest" className={`${styles.images} w-full h-full object-cover opacity-0`} />
+          </div>
+
+        </div>
+
+
+        <div className="flex w-full px-20 my-40 h-[600px]">
+          <div className={`${styles.description} opacity-0 flex flex-col w-1/2 pt-4`}>
+            <h2>
+              <span className="block text-5xl mb-2 text-white shadow-inner">Let's try</span>
+              <span className="block text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-slate-200 to-gray-600 drop-shadow-[0_10px_8px_rgba(0,0,0,0.8)] pb-2">
+                something different
+              </span>
+            </h2>
+            <p className="text-white text-lg mt-4">
+              Moove vehicles are 100% electric. Share your journey with a friend and you will be rewarded with a fee discount on your next ride. 
+            </p>
+          </div>
+
+          <div className="w-1/2 h-full">
+            <CardsFan />
+          </div>
+
+        </div>
       </div>
     </div>
   );
