@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 export const CardsFan = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const indexesArray: [1, 2, 3, 4, 5] = [1, 2, 3, 4, 5];
 
   useEffect(() => {
@@ -27,32 +28,46 @@ export const CardsFan = () => {
         {indexesArray.map(index => (
           <div
             key={index}
-            className={`absolute w-full h-full transition-all duration-1000 ease-out
+            onMouseEnter={() => setHoveredCard(index)}
+            onMouseLeave={() => setHoveredCard(null)}
+            className={`absolute w-full h-full transition-all duration-500 ease-out
               bg-gradient-to-br from-darkPurple to-darkPink
               rounded-xl shadow-xl
               transform-gpu preserve-3d
-              origin-bottom ${isVisible ? `translate-y-0 ${getRotation(index)}` : "translate-y-32 rotate-0"}`}
+              origin-bottom 
+              ${isVisible ? `translate-y-0 ${getRotation(index)}` : "translate-y-32 rotate-0"}
+              hover:cursor-pointer`}
             style={{
               transformStyle: "preserve-3d",
               transform: `
                   rotateY(${isVisible ? getYRotation(index) : 0}deg)
                   rotateZ(${isVisible ? getZRotation(index) : 0}deg)
                   translateZ(${12 * index}px)
-                  translateY(${isVisible ? getYOffset(index) : 0}px)
+                  translateY(${
+                    isVisible
+                      ? hoveredCard === index
+                        ? getYOffset(index) - 100
+                        : getYOffset(index)
+                      : 0
+                  }px)
                 `,
-              boxShadow: "0 0 20px rgba(0,0,0,0.2)",
+              boxShadow: hoveredCard === index 
+                ? "0 20px 25px rgba(0,0,0,0.3)" 
+                : "0 0 20px rgba(0,0,0,0.2)",
               border: "1px solid rgba(255,255,255,0.2)",
-              zIndex: index,
+              zIndex: index,  
             }}
           >
             <div className="absolute inset-0 border-2 border-white/10 rounded-xl" />
-            {<div
-              className="absolute h-full w-2"
-              style={{
-                transform: "rotateY(90deg) translateZ(143px) translateX(-1px)",
-                transformOrigin: "right",
-              }}
-            />}
+            {
+              <div
+                className="absolute h-full w-2"
+                style={{
+                  transform: "rotateY(90deg) translateZ(143px) translateX(-1px)",
+                  transformOrigin: "right",
+                }}
+              />
+            }
             <div
               className="absolute w-full h-2"
               style={{
@@ -60,10 +75,14 @@ export const CardsFan = () => {
                 transformOrigin: "bottom",
               }}
             />
-            <div className="text-white text-center">
-              <h3 className="text-xl font-bold my-5">{getName(index)}</h3>
-              <div className="w-full h-full px-4">
-                <img src={`/nft-images/${getName(index)}.jpg`}></img>
+            <div className="text-white text-start px-4">
+              <div className="flex justify-between items-center h-16">
+                <h3 className="text-xl font-bold my-5">{getName(index)}</h3>
+                <img src="/favicon.png" className="h-[80%]" alt="favicon" />
+              </div>
+
+              <div className="w-full h-full">
+                <img src={`/nft-images/${getName(index)}.jpg`} alt={getName(index)} />
               </div>
             </div>
           </div>
@@ -76,7 +95,7 @@ export const CardsFan = () => {
 type PossibleIndexes = 1 | 2 | 3 | 4 | 5;
 
 const getName = (index: PossibleIndexes) => {
-  const names = ["Skateboard", "Firetruck", "Scooter", "Helicopter", "Hoverboard"];
+  const names = ["Boat", "Firetruck", "Train", "Jetski", "Hoverboard"];
   return names[index - 1];
 };
 
@@ -111,3 +130,5 @@ const getYOffset = (index: PossibleIndexes) => {
   const offsets = [-20, -10, 0, 10, 20];
   return offsets[index - 1];
 };
+
+export default CardsFan;
