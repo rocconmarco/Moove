@@ -81,7 +81,7 @@ const Home: NextPage = () => {
             </p>
           </div>
 
-          <div className="w-1/2 h-full">
+          <div className={`w-1/2 h-full`}>
             <CardsFan />
           </div>
 

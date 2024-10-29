@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import styles from "./CardsFan.module.css";
 
 export const CardsFan = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -23,7 +24,7 @@ export const CardsFan = () => {
   }, []);
 
   return (
-    <div className="h-screen flex items-center justify-center">
+    <div className={`${styles.cards} opacity-0 h-[400px] flex items-start justify-center`}>
       <div id="cards-container" className="relative w-72 h-[342px]">
         {indexesArray.map(index => (
           <div
@@ -35,8 +36,7 @@ export const CardsFan = () => {
               rounded-xl shadow-xl
               transform-gpu preserve-3d
               origin-bottom 
-              ${isVisible ? `translate-y-0 ${getRotation(index)}` : "translate-y-32 rotate-0"}
-              hover:cursor-pointer`}
+              ${isVisible ? `translate-y-0 ${getRotation(index)}` : "translate-y-32 rotate-0"}`}
             style={{
               transformStyle: "preserve-3d",
               transform: `
