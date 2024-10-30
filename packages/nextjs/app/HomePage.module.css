@@ -59,3 +59,36 @@
   border-radius: 15px;
   pointer-events: none;
 }
+
+.icons {
+    margin-top: 40px;
+    width: 128px;
+    height: 128px;
+    object-fit: cover;
+    border-radius: 15px;
+    box-shadow: 
+        0 5px 15px rgba(0,0,0,0.5), 
+        0 0 0 1px rgba(255,255,255,0.1), 
+        inset 0 0 20px rgba(0,0,0,0.2);  
+    background: rgba(255,255,255,0.05);  
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.3s ease;
+}
+
+.icons::before {
+    content: '';
+    position: absolute;
+    top: 40px;  
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(
+        180deg,
+        rgba(255,255,255,0.1) 0%,
+        transparent 50%
+    );
+    border-radius: 15px;
+    pointer-events: none;
+}
