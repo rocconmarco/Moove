@@ -28,6 +28,19 @@
     animation: autoRun 40s linear infinite;
 }
 
+@media screen and (max-width: 640px) {
+    .banner .slider {
+        position: absolute;
+        width: 120px;
+        height: 160px;
+        top: 6%;
+        left: calc(50% - 100px);
+        transform-style: preserve-3d;
+        transform: perspective(1000px);
+        animation: autoRun 40s linear infinite;
+    }
+} 
+
 @keyframes autoRun {
     from {
         transform: perspective(1000px) rotateY(0deg);
