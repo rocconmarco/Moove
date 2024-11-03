@@ -75,6 +75,13 @@ module.exports = {
     ],
   },
   theme: {
+    screens: {
+      'sm': '660px',
+      'md': '768px',
+      'lg': '1024px',
+      'xl': '1280px',
+      '2xl': '1536px',
+    },
     extend: {
       boxShadow: {
         center: "0 0 12px -2px rgb(0 0 0 / 0.05)",

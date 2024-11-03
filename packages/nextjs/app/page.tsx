@@ -32,7 +32,7 @@ const Home: NextPage = () => {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row w-full px-5 sm:px-20 my-5 h-[600px]">
+        <div className="flex flex-col lg:flex-row w-full px-5 lg:px-20 my-5 h-[600px]">
           <div className={`${styles.description} opacity-0 flex flex-col w-full lg:w-1/2 pt-4`}>
             <h2>
               <span className="block text-3xl sm:text-5xl mb-2 text-white shadow-inner">Moove your way</span>
@@ -55,15 +55,15 @@ const Home: NextPage = () => {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row-reverse w-full px-5 sm:px-20 my-40 h-[600px]">
+        <div className="flex flex-col lg:flex-row-reverse w-full px-5 lg:px-20 my-40 h-[600px]">
           <div className={`${styles.description} opacity-0 flex flex-col w-full lg:w-1/2 pt-4`}>
-            <h2 className="sm:ml-8">
+            <h2 className="lg:ml-8">
               <span className="block text-3xl sm:text-5xl mb-2 text-white shadow-inner">Reduce the emissions,</span>
               <span className="block text-5xl sm:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-slate-200 to-gray-600 drop-shadow-[0_10px_8px_rgba(0,0,0,0.8)] pb-2">
                 help the planet
               </span>
             </h2>
-            <p className="text-white text-lg mt-4 sm:ml-8">
+            <p className="text-white text-lg mt-4 lg:ml-8">
               Moove vehicles are 100% electric. Share your journey with a friend and you will be rewarded with a fee
               discount on your next ride.
             </p>
@@ -78,15 +78,15 @@ const Home: NextPage = () => {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row w-full px-5 sm:px-20 my-40 h-[600px]">
-          <div className={`${styles.description} opacity-0 flex flex-col w-full sm:w-1/2 pt-4`}>
+        <div className="flex flex-col items-center w-full px-5 lg:px-20 my-40 h-[600px]">
+          <div className={`${styles.description} opacity-0 flex flex-col items-center w-full lg:w-[70%] pt-4`}>
             <h2>
-              <span className="block text-3xl sm:text-5xl mb-2 text-white shadow-inner">Introducing</span>
-              <span className="block text-5xl sm:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-slate-200 to-gray-600 drop-shadow-[0_10px_8px_rgba(0,0,0,0.8)] pb-2">
+              <span className="block text-3xl sm:text-5xl mb-2 text-white shadow-inner text-center">Introducing</span>
+              <span className="block text-5xl sm:text-7xl text-center font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-slate-200 to-gray-600 drop-shadow-[0_10px_8px_rgba(0,0,0,0.8)] pb-2">
                 Moove NFTs
               </span>
             </h2>
-            <p className="text-white text-lg mt-4">
+            <p className="text-white text-center text-lg mt-4 w-[80%]">
               Participate in public auctions and obtain your first Moove NFT. Get privileged access to vehicles and
               discounts on community events.
             </p>

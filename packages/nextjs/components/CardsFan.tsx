@@ -24,8 +24,8 @@ export const CardsFan = () => {
   }, []);
 
   return (
-    <div className={`${styles.cards} opacity-0 h-[400px] flex sm:items-start sm:justify-center`}>
-      <div id="cards-container" className="relative mt-8 sm:mt-0 px-24 sm:px-0 w-[187.2px] h-[240px] sm:w-72 sm:h-[342px]">
+    <div className={`${styles.cards} opacity-0 h-[400px] flex items-start justify-center`}>
+      <div id="cards-container" className="relative mt-8 w-[161.28px] h-[210px] sm:w-[201.6px] sm:h-[250px] md:w-72 md:h-[342px]">
         {indexesArray.map(index => (
           <div
             key={index}
@@ -77,11 +77,11 @@ export const CardsFan = () => {
             />
             <div className="text-white text-start px-4">
               <div className="flex justify-between items-center h-16">
-                <h3 className="text-base sm:text-xl font-bold my-5">{getName(index)}</h3>
-                <img src="/favicon.png" className="h-[55%] sm:h-[80%]" alt="favicon" />
+                <h3 className="text-base md:text-[20px] font-bold my-5">{getName(index)}</h3>
+                <img src="/favicon.png" className="h-[40%] sm:h-[55%] md:h-[80%]" alt="favicon" />
               </div>
 
-              <div className="w-full h-full">
+              <div className="sm:w-[170px] sm:h-[170px] md:w-[250px] md:h-[250px]">
                 <img src={`/nft-images/${getName(index)}.jpg`} alt={getName(index)} />
               </div>
             </div>

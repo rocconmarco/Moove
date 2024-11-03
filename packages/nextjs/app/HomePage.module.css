@@ -99,7 +99,7 @@
   }
 
   
-@media screen and (max-width: 640px) {
+@media screen and (max-width: 660px) {
   .city {
     position: absolute;
     right: 0;
@@ -153,7 +153,7 @@
   }
 }
 
-@media (min-width: 640px) and (max-width: 1024px) {
+@media (min-width: 661px) and (max-width: 1024px) {
   .city {
     position: absolute;
     right: 0;
