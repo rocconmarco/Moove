@@ -86,7 +86,7 @@ const Home: NextPage = () => {
                 Moove NFTs
               </span>
             </h2>
-            <p className="text-white text-center text-lg mt-4 w-[80%]">
+            <p className="text-white text-center text-lg mt-4 w-full lg:w-[80%]">
               Participate in public auctions and obtain your first Moove NFT. Get privileged access to vehicles and
               discounts on community events.
             </p>
