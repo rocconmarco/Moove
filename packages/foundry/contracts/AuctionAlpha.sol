@@ -3,20 +3,23 @@ pragma solidity ^0.8.0;
 
 import "forge-std/console.sol";
 import { IAuctionAlpha } from "./IAuctionAlpha.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-
-// Use openzeppelin to inherit battle-tested implementations (ERC20, ERC721, etc)
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { IMintableNFT } from "./IMintableNFT.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
  * A smart contract that manages the auction process for Moove NFTs
  * @author Marco Roccon
  */
-contract AuctionAlpha is IAuctionAlpha, Ownable {
+contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
+  IMintableNFT public nftContract;
+
   /**
-   * Keeps track of all the highest bids for every single auction
+   * Keeps track of all the bids for every single auction
    */
-  mapping(uint256 auctionId => mapping(address bidder => uint256 highestBid))
-    s_listOfBidsPerAuction;
+  mapping(uint256 auctionId => mapping(address bidder => uint256 highestBid)) public s_listOfBidsPerAuction;
+
+  mapping(address bidder => uint256 withdrawableAmount) public s_withdrawableAmountPerBidder;
 
   /**
    * Storage variable that stores the current auction id
@@ -26,15 +29,18 @@ contract AuctionAlpha is IAuctionAlpha, Ownable {
   uint256 public s_currentAuctionId;
   uint256 public s_currentNftId;
   uint256 public s_currentHighestBid;
-  address public temporaryWinner;
+  address public s_currentWinner;
 
   uint256 public constant AUCTION_DURATION_DAYS = 30 days;
+  uint256 private constant DECIMALS = 18;
 
   struct Auction {
     uint256 auctionId;
     uint256 nftId;
     uint256 openingTimestamp;
     uint256 closingTimestamp;
+    uint256 startingPrice;
+    uint256 minimumBidIncrement;
     bool isOpen;
     address winner;
   }
@@ -46,16 +52,84 @@ contract AuctionAlpha is IAuctionAlpha, Ownable {
 
   error AuctionAlpha__AuctionStillOngoing();
   error AuctionAlpha__AuctionAlreadyOpened();
+  error AuctionAlpha__BidAmountMustBeHigherThanCurrentHighestBid();
+  error AuctionAlpha__BidAmountLessThanMinimumBidIncrement();
+  error AuctionAlpha__AuctionClosed();
+  error AuctionAlpha__NoAmountToWithdraw();
+  error AuctionAlpha__TransferFailed();
+  error AuctionAlpha__WithdrawAmountMustBeGreaterThanZero();
+  error AuctionAlpha__WithdrawAmountExceedsWithdrawableAmount();
 
-  constructor() Ownable(msg.sender) {
+  constructor(address _nftContract) Ownable(msg.sender) {
+    nftContract = IMintableNFT(_nftContract);
     s_currentAuctionId = 0;
     s_currentNftId = 0;
     s_currentHighestBid = 0;
+    s_currentWinner = address(0);
   }
 
-  function bid(address bidder, uint256 auctionId, uint256 bidAmount) external { }
+  /**
+   * The function allows a user to place a bid
+   * The user will have to place a valid bid, which is a bid that is higher than the current highest bid and
+   * has a nominal increment equal or higher than the minimum bid increment.
+   * The bid value has to be sent as a transaction value, since this function is marked as payable
+   * 
+   */
+  function placeBid() public payable nonReentrant {
+    if(_isAuctionClosed()) {
+      revert AuctionAlpha__AuctionClosed();
+    }
+    if(msg.value <= s_currentHighestBid) {
+      revert AuctionAlpha__BidAmountMustBeHigherThanCurrentHighestBid();
+    }
+    if(msg.value - s_currentHighestBid < s_auctions[s_currentAuctionId - 1].minimumBidIncrement) {
+      revert AuctionAlpha__BidAmountLessThanMinimumBidIncrement();
+    }
+    address previousWinner = s_currentWinner;
+    uint256 previousHighestBid = s_currentHighestBid;
 
-  function startAuction() external onlyOwner {
+    // If it is the first bid, there is no need to update the withdrawable amount for the previous winner
+    // since it does not exist
+    if(previousWinner != address(0)) {
+      s_withdrawableAmountPerBidder[previousWinner] += previousHighestBid;
+    }
+    
+    uint256 actualBidAmount = s_withdrawableAmountPerBidder[msg.sender] + msg.value;
+    s_listOfBidsPerAuction[s_currentAuctionId][msg.sender] = actualBidAmount;
+    s_currentHighestBid = actualBidAmount;
+    s_currentWinner = msg.sender;
+
+    s_withdrawableAmountPerBidder[msg.sender] = 0;
+
+    emit BidPlaced(msg.sender, s_currentAuctionId, actualBidAmount);
+   }
+
+  /**
+   * This function can be called only when the user has been outbidded by another user
+   * The user can decide to withdraw all (or part of) the funds or to add other funds and outbid the current winner
+   */
+  function withdrawBid(uint256 withdrawAmountInWei) public nonReentrant {
+    if(withdrawAmountInWei == 0) {
+      revert AuctionAlpha__WithdrawAmountMustBeGreaterThanZero();
+    }
+    if(s_withdrawableAmountPerBidder[msg.sender] == 0) {
+      revert AuctionAlpha__NoAmountToWithdraw();
+    }
+    if(withdrawAmountInWei > s_withdrawableAmountPerBidder[msg.sender]) {
+      revert AuctionAlpha__WithdrawAmountExceedsWithdrawableAmount();
+    }
+
+    s_withdrawableAmountPerBidder[msg.sender] -= withdrawAmountInWei;
+
+    (bool success,) = msg.sender.call{value: withdrawAmountInWei}("");
+    if(!success) {
+      revert AuctionAlpha__TransferFailed();
+    }
+
+    emit WithdrawSuccess(msg.sender, withdrawAmountInWei);
+  }
+
+  function startAuction(uint256 startingPrice, uint256 minimumBidIncrement) external onlyOwner {
     if (s_currentAuctionId > 0 && s_auctions[s_currentAuctionId - 1].isOpen) {
       revert AuctionAlpha__AuctionAlreadyOpened();
     }
@@ -67,6 +141,8 @@ contract AuctionAlpha is IAuctionAlpha, Ownable {
         s_currentNftId,
         block.timestamp,
         block.timestamp + AUCTION_DURATION_DAYS,
+        startingPrice,
+        minimumBidIncrement * 10 ** DECIMALS,
         true,
         address(0)
       )
@@ -77,17 +153,27 @@ contract AuctionAlpha is IAuctionAlpha, Ownable {
     );
   }
 
+  // Follows CEI pattern
   function closeAuction() external onlyOwner {
     if (block.timestamp < s_auctions[s_currentAuctionId - 1].closingTimestamp) {
       revert AuctionAlpha__AuctionStillOngoing();
     }
     s_auctions[s_currentAuctionId - 1].isOpen = false;
-    s_auctions[s_currentAuctionId - 1].winner = temporaryWinner;
+    s_auctions[s_currentAuctionId - 1].winner = s_currentWinner;
+    s_currentWinner = address(0);
+    s_currentHighestBid = 0;
 
     // The second argument of the event should be the closing timestamp
     // This implies that this function must be called at the exact moment when the auction expires
     // Otherwise the two timestamps could vary
     emit AuctionClosed(s_currentAuctionId, block.timestamp);
+
+    nftContract.safeMint(s_auctions[s_currentAuctionId - 1].winner, s_currentNftId);
+    emit NFTMinted(s_auctions[s_currentAuctionId - 1].winner, s_currentNftId);
+  }
+
+  function _isAuctionClosed() internal view returns(bool) {
+    return !s_auctions[s_currentAuctionId - 1].isOpen;
   }
 
   /**
