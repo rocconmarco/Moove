@@ -59,6 +59,9 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
   error AuctionAlpha__TransferFailed();
   error AuctionAlpha__WithdrawAmountMustBeGreaterThanZero();
   error AuctionAlpha__WithdrawAmountExceedsWithdrawableAmount();
+  error AuctionAlpha__AuctionProcessStillNotInizialized();
+  error AuctionAlpha__MustSendEther();
+  error AuctionAlpha__SenderIsAlreadyTheCurrentWinner();
 
   constructor(address _nftContract) Ownable(msg.sender) {
     nftContract = IMintableNFT(_nftContract);
@@ -76,13 +79,26 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
    * 
    */
   function placeBid() public payable nonReentrant {
+    if(s_currentAuctionId == 0) {
+      revert AuctionAlpha__AuctionProcessStillNotInizialized();
+    }
     if(_isAuctionClosed()) {
       revert AuctionAlpha__AuctionClosed();
     }
-    if(msg.value <= s_currentHighestBid) {
+    if(s_currentWinner == msg.sender) {
+      revert AuctionAlpha__SenderIsAlreadyTheCurrentWinner();
+    }
+
+    // Can we move this before the first check?
+    uint256 actualBidAmount = s_withdrawableAmountPerBidder[msg.sender] + msg.value;
+    
+    if(msg.value == 0) {
+      revert AuctionAlpha__MustSendEther();
+    }
+    if(actualBidAmount <= s_currentHighestBid) {
       revert AuctionAlpha__BidAmountMustBeHigherThanCurrentHighestBid();
     }
-    if(msg.value - s_currentHighestBid < s_auctions[s_currentAuctionId - 1].minimumBidIncrement) {
+    if(actualBidAmount - s_currentHighestBid < s_auctions[s_currentAuctionId - 1].minimumBidIncrement) {
       revert AuctionAlpha__BidAmountLessThanMinimumBidIncrement();
     }
     address previousWinner = s_currentWinner;
@@ -94,7 +110,6 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
       s_withdrawableAmountPerBidder[previousWinner] += previousHighestBid;
     }
     
-    uint256 actualBidAmount = s_withdrawableAmountPerBidder[msg.sender] + msg.value;
     s_listOfBidsPerAuction[s_currentAuctionId][msg.sender] = actualBidAmount;
     s_currentHighestBid = actualBidAmount;
     s_currentWinner = msg.sender;
@@ -108,25 +123,25 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
    * This function can be called only when the user has been outbidded by another user
    * The user can decide to withdraw all (or part of) the funds or to add other funds and outbid the current winner
    */
-  function withdrawBid(uint256 withdrawAmountInWei) public nonReentrant {
-    if(withdrawAmountInWei == 0) {
+  function withdrawBid(uint256 withdrawAmount) public nonReentrant {
+    if(withdrawAmount == 0) {
       revert AuctionAlpha__WithdrawAmountMustBeGreaterThanZero();
     }
     if(s_withdrawableAmountPerBidder[msg.sender] == 0) {
       revert AuctionAlpha__NoAmountToWithdraw();
     }
-    if(withdrawAmountInWei > s_withdrawableAmountPerBidder[msg.sender]) {
+    if(withdrawAmount > s_withdrawableAmountPerBidder[msg.sender]) {
       revert AuctionAlpha__WithdrawAmountExceedsWithdrawableAmount();
     }
 
-    s_withdrawableAmountPerBidder[msg.sender] -= withdrawAmountInWei;
+    s_withdrawableAmountPerBidder[msg.sender] -= withdrawAmount;
 
-    (bool success,) = msg.sender.call{value: withdrawAmountInWei}("");
+    (bool success,) = msg.sender.call{value: withdrawAmount}("");
     if(!success) {
       revert AuctionAlpha__TransferFailed();
     }
 
-    emit WithdrawSuccess(msg.sender, withdrawAmountInWei);
+    emit WithdrawSuccess(msg.sender, withdrawAmount);
   }
 
   function startAuction(uint256 startingPrice, uint256 minimumBidIncrement) external onlyOwner {
@@ -135,6 +150,7 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
     }
     s_currentAuctionId++;
     s_currentNftId++;
+    s_currentHighestBid = startingPrice;
     s_auctions.push(
       Auction(
         s_currentAuctionId,
@@ -142,7 +158,7 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
         block.timestamp,
         block.timestamp + AUCTION_DURATION_DAYS,
         startingPrice,
-        minimumBidIncrement * 10 ** DECIMALS,
+        minimumBidIncrement,
         true,
         address(0)
       )
@@ -169,7 +185,14 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
     emit AuctionClosed(s_currentAuctionId, block.timestamp);
 
     nftContract.safeMint(s_auctions[s_currentAuctionId - 1].winner, s_currentNftId);
-    emit NFTMinted(s_auctions[s_currentAuctionId - 1].winner, s_currentNftId);
+  }
+
+  function getAuctionById(uint256 auctionId) public view returns(Auction memory) {
+    return s_auctions[auctionId];
+  }
+
+  function getWithdrawableAmountByBidderAddress(address bidder) public view returns(uint256) {
+    return s_withdrawableAmountPerBidder[bidder];
   }
 
   function _isAuctionClosed() internal view returns(bool) {

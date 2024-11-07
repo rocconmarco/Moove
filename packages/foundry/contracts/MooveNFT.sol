@@ -23,10 +23,12 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
 
   function mint(address to, uint256 tokenId) external {
     _mint(to, tokenId);
+    emit NFTMinted(to, tokenId);
   }
 
-    function safeMint(address to, uint256 tokenId) external {
+  function safeMint(address to, uint256 tokenId) external {
     _safeMint(to, tokenId);
+    emit NFTMinted(to, tokenId);
   }
 
   function tokenURI(uint256 tokenId) public view override returns(string memory) {

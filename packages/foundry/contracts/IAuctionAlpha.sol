@@ -8,9 +8,6 @@ interface IAuctionAlpha {
     event BidPlaced(address indexed bidder, uint256 indexed auctionId, uint256 bidAmount);
     event WithdrawSuccess(address indexed bidder, uint256 withdrawnedAmount);
 
-    // Is it possible to define the follwing event in the IMintableNFT interface?
-    event NFTMinted(address indexed to, uint256 indexed tokenId);
-
     function placeBid() external payable;
 
     function withdrawBid(uint256 withdrawAmount) external;
