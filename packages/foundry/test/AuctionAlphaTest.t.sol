@@ -158,6 +158,28 @@ contract AuctionAlphaTest is Test {
         assertEq(withdrawableAmountForUser1, 0);
     }
 
+    function testShouldNotAllowToWithdrawAmountHigherThanWithdrawableAmount() public {
+        auctionAlpha.startAuction(1000000000000000000, 500000000000000000);
+
+        uint256 initialBalance = 10000000000000000000;
+        uint256 user1Bid = 2000000000000000000;
+        uint256 user2Bid = 2500000000000000000;
+
+        hoax(USER1, initialBalance);
+        auctionAlpha.placeBid{value: user1Bid}();
+
+        assertEq(address(USER1).balance, initialBalance - user1Bid);
+
+        hoax(USER2, initialBalance);
+        auctionAlpha.placeBid{value: user2Bid}();
+
+        assertEq(address(USER2).balance, initialBalance - user2Bid);
+
+        vm.prank(USER1);
+        vm.expectRevert(AuctionAlpha.AuctionAlpha__WithdrawAmountExceedsWithdrawableAmount.selector);
+        auctionAlpha.withdrawBid(user1Bid + 1);
+    }
+
     function testSecondBidFromTheSameUser() public {
         auctionAlpha.startAuction(1000000000000000000, 500000000000000000);
 
@@ -171,5 +193,48 @@ contract AuctionAlphaTest is Test {
         auctionAlpha.placeBid{value: 1000000000000000000}();
 
         assertEq(auctionAlpha.s_currentHighestBid(), 3000000000000000000);
+        assertEq(auctionAlpha.getWithdrawableAmountByBidderAddress(address(USER1)), 0);
+    }
+
+    function testShouldNotAllowToCloseAuctionBeforeTime() public {
+        auctionAlpha.startAuction(1000000000000000000, 500000000000000000);
+
+        vm.expectRevert(AuctionAlpha.AuctionAlpha__AuctionStillOngoing.selector);
+        auctionAlpha.closeAuction();
+    }
+
+    function testCloseAuction() public {
+        auctionAlpha.startAuction(1000000000000000000, 500000000000000000);
+
+        hoax(USER1, 10000000000000000000);
+        auctionAlpha.placeBid{value: 2000000000000000000}();
+
+        uint256 currentAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Auction memory auctionBeforeClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
+
+        vm.warp(auctionBeforeClosing.openingTimestamp + 30 days);
+        auctionAlpha.closeAuction();
+
+        AuctionAlpha.Auction memory auctionAfterClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
+
+        assertEq(auctionAfterClosing.isOpen, false);
+        assertEq(mooveNFT.balanceOf(address(USER1)), 1);
+    }
+
+    function testCloseAuctionWithoutWinner() public {
+        auctionAlpha.startAuction(1000000000000000000, 500000000000000000);
+
+        uint256 currentAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Auction memory auctionBeforeClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
+
+        vm.warp(auctionBeforeClosing.openingTimestamp + 30 days);
+        auctionAlpha.closeAuction();
+
+        AuctionAlpha.Auction memory auctionAfterClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
+        AuctionAlpha.UnsoldNFT memory unsoldNFT = auctionAlpha.getUnsoldNFT(0);
+
+        assertEq(auctionAfterClosing.isOpen, false);
+        assertEq(unsoldNFT.nftId, 1);
+        assertEq(unsoldNFT.sellingPrice, auctionAfterClosing.startingPrice);
     }
 }

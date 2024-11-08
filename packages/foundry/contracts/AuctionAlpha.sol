@@ -26,6 +26,9 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
    * It allows the bidder to correctly place the bid for the current auction
    * The variable is initialized at 0, so that the first auctionId will be incremented to 1
    */
+
+  // FARE UNA VARIABILE CON IL NUMERO TOTALE DI OFFERTE?
+
   uint256 public s_currentAuctionId;
   uint256 public s_currentNftId;
   uint256 public s_currentHighestBid;
@@ -44,6 +47,13 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
     bool isOpen;
     address winner;
   }
+
+  struct UnsoldNFT {
+    uint256 nftId;
+    uint256 sellingPrice;
+  }
+  // List of all the unsold NFTs to be fecthed from the front end
+  UnsoldNFT[] public s_unsoldNFTs;
 
   /**
    * Record of all the auctions
@@ -91,7 +101,7 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
 
     // Can we move this before the first check?
     uint256 actualBidAmount = s_withdrawableAmountPerBidder[msg.sender] + msg.value;
-    
+
     if(msg.value == 0) {
       revert AuctionAlpha__MustSendEther();
     }
@@ -184,7 +194,15 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
     // Otherwise the two timestamps could vary
     emit AuctionClosed(s_currentAuctionId, block.timestamp);
 
-    nftContract.safeMint(s_auctions[s_currentAuctionId - 1].winner, s_currentNftId);
+    if(s_auctions[s_currentAuctionId - 1].winner == address(0)){
+      UnsoldNFT memory newUnsoldNFT = UnsoldNFT({
+        nftId: s_currentNftId,
+        sellingPrice: s_auctions[s_currentAuctionId - 1].startingPrice
+      });
+      s_unsoldNFTs.push(newUnsoldNFT);
+    } else {
+      nftContract.safeMint(s_auctions[s_currentAuctionId - 1].winner, s_currentNftId);
+    }
   }
 
   function getAuctionById(uint256 auctionId) public view returns(Auction memory) {
@@ -193,6 +211,10 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
 
   function getWithdrawableAmountByBidderAddress(address bidder) public view returns(uint256) {
     return s_withdrawableAmountPerBidder[bidder];
+  }
+
+  function getUnsoldNFT(uint256 index) public view returns(UnsoldNFT memory) {
+    return s_unsoldNFTs[index];
   }
 
   function _isAuctionClosed() internal view returns(bool) {
