@@ -12,7 +12,7 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.s
  * @author Marco Roccon
  */
 contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
-  IMintableNFT public nftContract;
+  IMintableNFT public immutable i_nftContract;
 
   /**
    * Keeps track of all the bids for every single auction
@@ -74,7 +74,7 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
   error AuctionAlpha__SenderIsAlreadyTheCurrentWinner();
 
   constructor(address _nftContract) Ownable(msg.sender) {
-    nftContract = IMintableNFT(_nftContract);
+    i_nftContract = IMintableNFT(_nftContract);
     s_currentAuctionId = 0;
     s_currentNftId = 0;
     s_currentHighestBid = 0;
@@ -201,7 +201,7 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
       });
       s_unsoldNFTs.push(newUnsoldNFT);
     } else {
-      nftContract.safeMint(s_auctions[s_currentAuctionId - 1].winner, s_currentNftId);
+      i_nftContract.safeMint(s_auctions[s_currentAuctionId - 1].winner, s_currentNftId);
     }
   }
 

@@ -205,6 +205,8 @@ contract AuctionAlphaTest is Test {
 
     function testCloseAuction() public {
         auctionAlpha.startAuction(1000000000000000000, 500000000000000000);
+        // This line is necessary to allow the AuctionAlpha contract to mint the NFT to the auction's winner
+        mooveNFT.addAuthorizedMinter(address(auctionAlpha));
 
         hoax(USER1, 10000000000000000000);
         auctionAlpha.placeBid{value: 2000000000000000000}();
