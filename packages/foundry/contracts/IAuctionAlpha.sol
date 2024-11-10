@@ -7,6 +7,7 @@ interface IAuctionAlpha {
     event AuctionClosed(uint256 indexed auctionId, uint256 indexed closingTimestamp);
     event BidPlaced(address indexed bidder, uint256 indexed auctionId, uint256 bidAmount);
     event WithdrawSuccess(address indexed bidder, uint256 withdrawnedAmount);
+    event UnsoldNFTListed(uint256 indexed tokenId);
 
     function placeBid() external payable;
 
@@ -15,4 +16,6 @@ interface IAuctionAlpha {
     function startAuction(uint256 startingPrice, uint256 minimumBidIncrement) external;
 
     function closeAuction() external;
+
+    function buyUnsoldNFT(uint256 tokenId) payable external;
 }

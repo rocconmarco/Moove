@@ -48,12 +48,24 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
     address winner;
   }
 
+  mapping (uint256 tokenId => uint256 sellingPrice) s_unsoldNFTsSellingPrice ;
+
   struct UnsoldNFT {
-    uint256 nftId;
+    uint256 tokenId;
     uint256 sellingPrice;
   }
   // List of all the unsold NFTs to be fecthed from the front end
-  UnsoldNFT[] public s_unsoldNFTs;
+  UnsoldNFT[] public s_listOfUnsoldNFTs;
+  
+  // Crucial to check if the unsold NFT is for sale or not
+  // The check has to be done via a boolean because uint256 values in mappings are inizialized
+  // by default at 0, so it is not sufficient to check if the selling price of the unsold NFT
+  // is set to 0
+  mapping(uint256 tokenId => bool listed) private s_isTokenListed;
+
+  // Helper mapping to track the array index of the unsold NFTs
+  // to easily remove items from the array when an unsold NFT has been sold
+  mapping(uint256 tokenId => uint256 arrayIndex) private s_tokenIdToArrayIndexUnsoldNFTs;
 
   /**
    * Record of all the auctions
@@ -72,6 +84,9 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
   error AuctionAlpha__AuctionProcessStillNotInizialized();
   error AuctionAlpha__MustSendEther();
   error AuctionAlpha__SenderIsAlreadyTheCurrentWinner();
+  error AuctionAlpha__IncorrectPayment();
+  error AuctionAlpha__TokenNotAvailable();
+  error AuctionAlpha__AllNFTsListed();
 
   constructor(address _nftContract) Ownable(msg.sender) {
     i_nftContract = IMintableNFT(_nftContract);
@@ -158,6 +173,9 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
     if (s_currentAuctionId > 0 && s_auctions[s_currentAuctionId - 1].isOpen) {
       revert AuctionAlpha__AuctionAlreadyOpened();
     }
+    if(s_currentAuctionId == i_nftContract.getMaxSupply()) {
+      revert AuctionAlpha__AllNFTsListed();
+    }
     s_currentAuctionId++;
     s_currentNftId++;
     s_currentHighestBid = startingPrice;
@@ -196,13 +214,51 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
 
     if(s_auctions[s_currentAuctionId - 1].winner == address(0)){
       UnsoldNFT memory newUnsoldNFT = UnsoldNFT({
-        nftId: s_currentNftId,
+        tokenId: s_currentNftId,
         sellingPrice: s_auctions[s_currentAuctionId - 1].startingPrice
       });
-      s_unsoldNFTs.push(newUnsoldNFT);
+      s_isTokenListed[s_currentNftId] = true;
+      s_listOfUnsoldNFTs.push(newUnsoldNFT);
+      s_tokenIdToArrayIndexUnsoldNFTs[s_currentNftId] = s_listOfUnsoldNFTs.length - 1;
+      s_unsoldNFTsSellingPrice[s_currentNftId] = s_auctions[s_currentAuctionId - 1].startingPrice;
+      emit UnsoldNFTListed(s_currentNftId);
     } else {
       i_nftContract.safeMint(s_auctions[s_currentAuctionId - 1].winner, s_currentNftId);
     }
+  }
+
+  function buyUnsoldNFT(uint256 tokenId) public payable {
+    if(!s_isTokenListed[tokenId]) {
+      revert AuctionAlpha__TokenNotAvailable();
+    }
+    uint256 unsoldNFTPrice = s_unsoldNFTsSellingPrice[tokenId];
+    if(msg.value != unsoldNFTPrice) {
+      revert AuctionAlpha__IncorrectPayment();
+    }
+
+    // Out of the three mappings involved in this operation
+    // We decided to only update this, to save gas
+    // As it serves as a gateway to access the other two
+    // In the other two mappings the array index and the selling price of already sold NFTs
+    // Will maintain their historical value, since they will no longer be accessible after the purchase
+    s_isTokenListed[tokenId] = false;
+
+    // Applying the swap & pop tecnique to delete the purchased NFT from the list of unsold NFTs
+    // ATTENTION: the order of the array will be changed
+
+    // If the NFT is already the last of the list
+    // pop it out of the array
+    uint256 indexToRemove = _getArrayIndexOfUnsoldNFT(tokenId);
+    if(indexToRemove == s_listOfUnsoldNFTs.length - 1) {
+      s_listOfUnsoldNFTs.pop();
+    } else {
+      // otherwise swap it with the last NFT of the array and update the mapping
+      UnsoldNFT memory lastUnsoldNFT = s_listOfUnsoldNFTs[s_listOfUnsoldNFTs.length - 1];
+      s_listOfUnsoldNFTs[indexToRemove] = lastUnsoldNFT;
+      s_tokenIdToArrayIndexUnsoldNFTs[lastUnsoldNFT.tokenId] = indexToRemove;
+      s_listOfUnsoldNFTs.pop();
+    }
+    i_nftContract.safeMint(msg.sender, tokenId);
   }
 
   function getAuctionById(uint256 auctionId) public view returns(Auction memory) {
@@ -213,12 +269,28 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
     return s_withdrawableAmountPerBidder[bidder];
   }
 
-  function getUnsoldNFT(uint256 index) public view returns(UnsoldNFT memory) {
-    return s_unsoldNFTs[index];
+  function getUnsoldNFTPrice(uint256 tokenId) public view returns(uint256) {
+    return s_unsoldNFTsSellingPrice[tokenId];
   }
 
   function _isAuctionClosed() internal view returns(bool) {
     return !s_auctions[s_currentAuctionId - 1].isOpen;
+  }
+
+  function _getArrayIndexOfUnsoldNFT(uint256 tokenId) internal view returns(uint256) {
+    return s_tokenIdToArrayIndexUnsoldNFTs[tokenId];
+  }
+
+  function getArrayIndexOfUnsoldNFT(uint256 tokenId) public view returns(uint256) {
+    return s_tokenIdToArrayIndexUnsoldNFTs[tokenId];
+  }
+
+  function getIsTokenListed(uint256 tokenId) public view returns(bool) {
+    return s_isTokenListed[tokenId];
+  }
+
+  function getUnsoldNFTsArrayLength() public view returns(uint256) {
+    return s_listOfUnsoldNFTs.length;
   }
 
   /**

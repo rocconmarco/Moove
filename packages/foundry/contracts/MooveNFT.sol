@@ -9,8 +9,12 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 contract MooveNFT is ERC721, IMintableNFT, Ownable {
 
   error MooveNFT__MintingNotAuthorized();
+  error MooveNFT__MintingNonExistingToken();
+  error MooveNFT__NotAValidAddress();
+  error MooveNFT__NotAValidBaseURI();
+  error MooveNFT__MaxSupplyCanOnlyBeInremented();
 
-  uint256 private s_tokenCounter;
+  uint256 public s_tokenCounter;
 
   // This must be in the form ipfs://<CID>
   string private s_baseURI;
@@ -30,11 +34,19 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
   constructor(string memory baseURI) ERC721("MooveNFT", "MOOVE") Ownable(msg.sender) {
     s_baseURI = baseURI;
     s_tokenCounter = 0;
+    s_maxSupply = 13;
   }
 
   function mint(address to, uint256 tokenId) external {
+    if(to == address(0)) {
+      revert MooveNFT__NotAValidAddress();
+    }
+    if(tokenId == 0 || tokenId > s_maxSupply) {
+      revert MooveNFT__MintingNonExistingToken();
+    }
     if(s_authorizedMinters[msg.sender]) {
       _mint(to, tokenId);
+      s_tokenCounter++;
       emit NFTMinted(to, tokenId);
     } else {
       revert MooveNFT__MintingNotAuthorized();
@@ -42,8 +54,15 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
   }
 
   function safeMint(address to, uint256 tokenId) external {
+    if(to == address(0)) {
+      revert MooveNFT__NotAValidAddress();
+    }
+    if(tokenId == 0 || tokenId > s_maxSupply) {
+      revert MooveNFT__MintingNonExistingToken();
+    }
     if(s_authorizedMinters[msg.sender]) {
       _safeMint(to, tokenId);
+      s_tokenCounter++;
       emit NFTMinted(to, tokenId);
     } else {
       revert MooveNFT__MintingNotAuthorized();
@@ -51,15 +70,38 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
   }
 
   function addAuthorizedMinter(address minter) public onlyOwner {
+    if(minter == address(0)) {
+      revert MooveNFT__NotAValidAddress();
+    }
     s_authorizedMinters[minter] = true;
+  }
+
+  function removeAuthorizedMinter(address minter) public onlyOwner {
+    s_authorizedMinters[minter] = false;
+  }
+
+  function getMaxSupply() public view returns(uint256) {
+    return s_maxSupply;
   }
 
   function tokenURI(uint256 tokenId) public view override returns(string memory) {
     return string(abi.encodePacked(s_baseURI, '/', Strings.toString(tokenId), '.json'));
   }
 
-  function setMaxSupply(uint256 maxSupply) public onlyOwner {
-    s_maxSupply = maxSupply;
+  function setMaxSupply(uint256 newMaxSupply) public onlyOwner {
+    // The supply can only be incremented
+    // It is not possibile to set a max supply lower than the first release of NFTs (lower than 13)
+    if(newMaxSupply <= s_maxSupply) {
+      revert MooveNFT__MaxSupplyCanOnlyBeInremented();
+    }
+    s_maxSupply = newMaxSupply;
+  }
+
+  function setBaseURI(string memory newBaseURI) public {
+    if(bytes(newBaseURI).length == 0) {
+      revert MooveNFT__NotAValidBaseURI();
+    }
+    s_baseURI = newBaseURI;
   }
 
   function checkIfAuthorizedMinter(address minter) public view returns(bool) {
