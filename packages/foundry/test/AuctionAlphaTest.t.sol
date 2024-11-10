@@ -92,7 +92,14 @@ contract AuctionAlphaTest is Test {
         hoax(USER1, initialBalance);
         auctionAlpha.placeBid{value: user1Bid}();
 
+        uint256 currentAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Bid[] memory listOfBids = auctionAlpha.getListOfBids(currentAuctionId);
+
         assertEq(auctionAlpha.s_currentHighestBid(), user1Bid);
+        assertEq(listOfBids.length, 1);
+        assertEq(listOfBids[0].bidder, address(USER1));
+        assertEq(listOfBids[0].amount, user1Bid);
+        assertEq(listOfBids[0].timestamp, block.timestamp);
     }
 
     function testMultipleBidsFromTheSameUser() public {
@@ -124,8 +131,18 @@ contract AuctionAlphaTest is Test {
         hoax(USER2, initialBalance);
         auctionAlpha.placeBid{value: user2Bid}();
 
+        uint256 currentAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Bid[] memory listOfBids = auctionAlpha.getListOfBids(currentAuctionId);
+
         assertEq(auctionAlpha.s_currentHighestBid(), user2Bid);
         assertEq(auctionAlpha.s_currentWinner(), address(USER2));
+        assertEq(listOfBids.length, 2);
+        assertEq(listOfBids[0].bidder, address(USER1));
+        assertEq(listOfBids[1].bidder, address(USER2));
+        assertEq(listOfBids[0].amount, user1Bid);
+        assertEq(listOfBids[1].amount, user2Bid);
+        assertEq(listOfBids[0].timestamp, block.timestamp);
+        assertEq(listOfBids[1].timestamp, block.timestamp);
     }
 
     function testWithdrawableAmountCorrectlySetAfterBeingOutbidded() public {

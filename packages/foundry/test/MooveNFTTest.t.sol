@@ -65,16 +65,6 @@ contract MooveNFTTest is Test {
         mooveNFT.mint(USER1, 0);
     }
 
-    function testSetMaxSupply() public {
-        mooveNFT.setMaxSupply(14);
-        assertEq(mooveNFT.s_maxSupply(), 14);
-    }
-
-    function testShouldFailWhenDecrementingMaxSupply() public {
-        vm.expectRevert(MooveNFT.MooveNFT__MaxSupplyCanOnlyBeInremented.selector);
-        mooveNFT.setMaxSupply(12);
-    }
-
     function testShouldFailWhenAuthorizingTheZeroAddress() public {
         vm.expectRevert(MooveNFT.MooveNFT__NotAValidAddress.selector);
         mooveNFT.addAuthorizedMinter(address(0));

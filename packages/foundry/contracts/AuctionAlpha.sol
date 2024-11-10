@@ -12,65 +12,6 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.s
  * @author Marco Roccon
  */
 contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
-  IMintableNFT public immutable i_nftContract;
-
-  /**
-   * Keeps track of all the bids for every single auction
-   */
-  mapping(uint256 auctionId => mapping(address bidder => uint256 highestBid)) public s_listOfBidsPerAuction;
-
-  mapping(address bidder => uint256 withdrawableAmount) public s_withdrawableAmountPerBidder;
-
-  /**
-   * Storage variable that stores the current auction id
-   * It allows the bidder to correctly place the bid for the current auction
-   * The variable is initialized at 0, so that the first auctionId will be incremented to 1
-   */
-
-  // FARE UNA VARIABILE CON IL NUMERO TOTALE DI OFFERTE?
-
-  uint256 public s_currentAuctionId;
-  uint256 public s_currentNftId;
-  uint256 public s_currentHighestBid;
-  address public s_currentWinner;
-
-  uint256 public constant AUCTION_DURATION_DAYS = 30 days;
-  uint256 private constant DECIMALS = 18;
-
-  struct Auction {
-    uint256 auctionId;
-    uint256 nftId;
-    uint256 openingTimestamp;
-    uint256 closingTimestamp;
-    uint256 startingPrice;
-    uint256 minimumBidIncrement;
-    bool isOpen;
-    address winner;
-  }
-
-  mapping (uint256 tokenId => uint256 sellingPrice) s_unsoldNFTsSellingPrice ;
-
-  struct UnsoldNFT {
-    uint256 tokenId;
-    uint256 sellingPrice;
-  }
-  // List of all the unsold NFTs to be fecthed from the front end
-  UnsoldNFT[] public s_listOfUnsoldNFTs;
-  
-  // Crucial to check if the unsold NFT is for sale or not
-  // The check has to be done via a boolean because uint256 values in mappings are inizialized
-  // by default at 0, so it is not sufficient to check if the selling price of the unsold NFT
-  // is set to 0
-  mapping(uint256 tokenId => bool listed) private s_isTokenListed;
-
-  // Helper mapping to track the array index of the unsold NFTs
-  // to easily remove items from the array when an unsold NFT has been sold
-  mapping(uint256 tokenId => uint256 arrayIndex) private s_tokenIdToArrayIndexUnsoldNFTs;
-
-  /**
-   * Record of all the auctions
-   */
-  Auction[] public s_auctions;
 
   error AuctionAlpha__AuctionStillOngoing();
   error AuctionAlpha__AuctionAlreadyOpened();
@@ -87,6 +28,90 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
   error AuctionAlpha__IncorrectPayment();
   error AuctionAlpha__TokenNotAvailable();
   error AuctionAlpha__AllNFTsListed();
+  error AuctionAlpha__DirectPaymentNotAllowed();
+
+
+  struct Auction {
+    uint256 auctionId;
+    uint256 nftId;
+    uint256 openingTimestamp;
+    uint256 closingTimestamp;
+    uint256 startingPrice;
+    uint256 minimumBidIncrement;
+    bool isOpen;
+    address winner;
+  }
+
+  struct UnsoldNFT {
+    uint256 tokenId;
+    uint256 sellingPrice;
+  }
+
+  struct Bid {
+    address bidder;
+    uint256 amount;
+    uint256 timestamp;
+  }
+
+  /**
+   * Interface that allows AuctionAlpha to access the NFT contract
+   * Only the essential function for minting (mint, safeMint) and for checking
+   * the total supply are defined in the interface
+   */
+  IMintableNFT public immutable i_nftContract;
+
+  
+  /// Mapping that keeps track of the highest bid for every bidder in all the auctions
+  mapping(uint256 auctionId => mapping(address bidder => uint256 highestBid)) public s_listOfHighestBidPerUser;
+
+  /**
+   * Mapping that keeps track of every single bid for every auction held
+   * Used for retrieving the history of bids for a particular auction
+   */
+  mapping(uint256 auctionId => Bid[] listOfBids) public s_bidHistory;
+
+  /**
+   * Mapping that is updated every time a user gets outbidded by another user
+   * It is the amount of ETH that the user can withdraw from the contract
+   * The user can decide to use this amount to place other bids 
+   */
+  mapping(address bidder => uint256 withdrawableAmount) public s_withdrawableAmountPerBidder;
+
+  uint256 public s_currentAuctionId;
+  uint256 public s_currentNftId;
+  uint256 public s_currentHighestBid;
+  address public s_currentWinner;
+
+  uint256 public constant AUCTION_DURATION_DAYS = 30 days;
+  uint256 private constant DECIMALS = 18;
+
+  /** Mapping that register the selling price of the unsold NFTs
+   * It is set as the nft starting price everytime an auction ends with zero bids
+   */
+  mapping (uint256 tokenId => uint256 sellingPrice) s_unsoldNFTsSellingPrice ;
+
+  
+  /// List of all the unsold NFTs to be fecthed from the front end
+  UnsoldNFT[] public s_listOfUnsoldNFTs;
+  
+  /** Crucial to check if the unsold NFT is for sale or not
+   * The check has to be done via a boolean because uint256 values in mappings are inizialized
+   * by default at 0, so it is not sufficient to check if the selling price of the unsold NFT
+   * is set to 0
+   */ 
+  mapping(uint256 tokenId => bool listed) private s_isTokenListed;
+
+  /** Helper mapping to track the array index of the unsold NFTs
+   * to easily remove items from the array when an unsold NFT has been sold
+   */ 
+  mapping(uint256 tokenId => uint256 arrayIndex) private s_tokenIdToArrayIndexUnsoldNFTs;
+
+  /**
+   * Record of all the auctions
+   */
+  Auction[] public s_auctions;
+
+  
 
   constructor(address _nftContract) Ownable(msg.sender) {
     i_nftContract = IMintableNFT(_nftContract);
@@ -96,12 +121,31 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
     s_currentWinner = address(0);
   }
 
+  /** The contract does not accept direct payment
+   * This way we prefer an explicit rather than implicit approach
+   * The only way to pay the contract is via the placeBid function
+   */ 
+  receive() external payable { 
+    revert AuctionAlpha__DirectPaymentNotAllowed();
+  }
+
+  fallback() external payable {
+    revert AuctionAlpha__DirectPaymentNotAllowed();
+  }
+
   /**
    * The function allows a user to place a bid
    * The user will have to place a valid bid, which is a bid that is higher than the current highest bid and
    * has a nominal increment equal or higher than the minimum bid increment.
    * The bid value has to be sent as a transaction value, since this function is marked as payable
    * 
+   * A list of checks has been implemented, the function cannot be called if the owner of the contract
+   * has not started any auctions, if the auction is closed and there are no new auctions been started,
+   * and if the current highest bid has been made from the same sender of the transaction
+   * 
+   * The function will generate a revert if the value sent is equal to zero, if the amount sent (eventually
+   * added with the withdrawable amount of the sender) is less than or equal to the current highest bid, and if
+   * actual bid amount is less than the required minimum increment for the bid to be valid
    */
   function placeBid() public payable nonReentrant {
     if(s_currentAuctionId == 0) {
@@ -114,7 +158,6 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
       revert AuctionAlpha__SenderIsAlreadyTheCurrentWinner();
     }
 
-    // Can we move this before the first check?
     uint256 actualBidAmount = s_withdrawableAmountPerBidder[msg.sender] + msg.value;
 
     if(msg.value == 0) {
@@ -126,25 +169,36 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
     if(actualBidAmount - s_currentHighestBid < s_auctions[s_currentAuctionId - 1].minimumBidIncrement) {
       revert AuctionAlpha__BidAmountLessThanMinimumBidIncrement();
     }
-    address previousWinner = s_currentWinner;
-    uint256 previousHighestBid = s_currentHighestBid;
 
     // If it is the first bid, there is no need to update the withdrawable amount for the previous winner
-    // since it does not exist
-    if(previousWinner != address(0)) {
-      s_withdrawableAmountPerBidder[previousWinner] += previousHighestBid;
+    // since it doesn't exist yet
+    if(s_currentWinner != address(0)) {
+      s_withdrawableAmountPerBidder[s_currentWinner] += s_currentHighestBid;
     }
-    
-    s_listOfBidsPerAuction[s_currentAuctionId][msg.sender] = actualBidAmount;
+
+    // Updating all the relevant state variables
+    s_listOfHighestBidPerUser[s_currentAuctionId][msg.sender] = actualBidAmount;
     s_currentHighestBid = actualBidAmount;
     s_currentWinner = msg.sender;
+    s_bidHistory[s_currentAuctionId].push(Bid({
+      bidder: msg.sender,
+      amount: actualBidAmount,
+      timestamp: block.timestamp
+    }));
 
+    // Resetting the withdrawable amount for the sender of the transaction
+    // The user must use all of its withdrawable amount, as well as additional funds,
+    // to outbid the current winner
     s_withdrawableAmountPerBidder[msg.sender] = 0;
 
     emit BidPlaced(msg.sender, s_currentAuctionId, actualBidAmount);
    }
 
   /**
+   * @param withdrawAmount amount to be withdrawed by the sender
+   * It must be greater than zero, and less than or equal to the total withdrawable amount
+   * registered in the related mapping for the sender
+   * 
    * This function can be called only when the user has been outbidded by another user
    * The user can decide to withdraw all (or part of) the funds or to add other funds and outbid the current winner
    */
@@ -169,7 +223,18 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
     emit WithdrawSuccess(msg.sender, withdrawAmount);
   }
 
-  function startAuction(uint256 startingPrice, uint256 minimumBidIncrement) external onlyOwner {
+
+  /**
+   * @param startingPrice base price decided by the owner for the NFT
+   * @param minimumBidIncrement minimum difference in price between the previous and the current bid
+   * 
+   * The owner of the contract starts the auction setting the starting price for the NFT
+   * and the minimum bid increment for every bid to be considered valid
+   * 
+   * It checks whether there is already an auction opened and if there are still NFTs to be listed
+   * in the auction.
+   */
+  function startAuction(uint256 startingPrice, uint256 minimumBidIncrement) public onlyOwner {
     if (s_currentAuctionId > 0 && s_auctions[s_currentAuctionId - 1].isOpen) {
       revert AuctionAlpha__AuctionAlreadyOpened();
     }
@@ -198,7 +263,7 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
   }
 
   // Follows CEI pattern
-  function closeAuction() external onlyOwner {
+  function closeAuction() public onlyOwner {
     if (block.timestamp < s_auctions[s_currentAuctionId - 1].closingTimestamp) {
       revert AuctionAlpha__AuctionStillOngoing();
     }
@@ -261,8 +326,21 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
     i_nftContract.safeMint(msg.sender, tokenId);
   }
 
+
+  function _isAuctionClosed() internal view returns(bool) {
+    return !s_auctions[s_currentAuctionId - 1].isOpen;
+  }
+
+  function _getArrayIndexOfUnsoldNFT(uint256 tokenId) internal view returns(uint256) {
+    return s_tokenIdToArrayIndexUnsoldNFTs[tokenId];
+  }
+
   function getAuctionById(uint256 auctionId) public view returns(Auction memory) {
     return s_auctions[auctionId];
+  }
+
+  function getListOfBids(uint256 auctionId) public view returns(Bid[] memory) {
+    return s_bidHistory[auctionId];
   }
 
   function getWithdrawableAmountByBidderAddress(address bidder) public view returns(uint256) {
@@ -271,14 +349,6 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
 
   function getUnsoldNFTPrice(uint256 tokenId) public view returns(uint256) {
     return s_unsoldNFTsSellingPrice[tokenId];
-  }
-
-  function _isAuctionClosed() internal view returns(bool) {
-    return !s_auctions[s_currentAuctionId - 1].isOpen;
-  }
-
-  function _getArrayIndexOfUnsoldNFT(uint256 tokenId) internal view returns(uint256) {
-    return s_tokenIdToArrayIndexUnsoldNFTs[tokenId];
   }
 
   function getArrayIndexOfUnsoldNFT(uint256 tokenId) public view returns(uint256) {
@@ -292,9 +362,5 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
   function getUnsoldNFTsArrayLength() public view returns(uint256) {
     return s_listOfUnsoldNFTs.length;
   }
-
-  /**
-   * Function that allows the contract to receive ETH
-   */
-  receive() external payable { }
+  
 }

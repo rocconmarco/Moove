@@ -15,13 +15,9 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
   error MooveNFT__MaxSupplyCanOnlyBeInremented();
 
   uint256 public s_tokenCounter;
-
   // This must be in the form ipfs://<CID>
   string private s_baseURI;
-
-  // It is not a constant variable because the owner will have the choice
-  // to release other collections in the future
-  uint256 public s_maxSupply;
+  uint256 private s_maxSupply;
 
   // A mapping of all the addresses authorized to mint NFTs
   // created to avoid unathorized minting of NFTs directly from this contract
@@ -86,22 +82,6 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
 
   function tokenURI(uint256 tokenId) public view override returns(string memory) {
     return string(abi.encodePacked(s_baseURI, '/', Strings.toString(tokenId), '.json'));
-  }
-
-  function setMaxSupply(uint256 newMaxSupply) public onlyOwner {
-    // The supply can only be incremented
-    // It is not possibile to set a max supply lower than the first release of NFTs (lower than 13)
-    if(newMaxSupply <= s_maxSupply) {
-      revert MooveNFT__MaxSupplyCanOnlyBeInremented();
-    }
-    s_maxSupply = newMaxSupply;
-  }
-
-  function setBaseURI(string memory newBaseURI) public {
-    if(bytes(newBaseURI).length == 0) {
-      revert MooveNFT__NotAValidBaseURI();
-    }
-    s_baseURI = newBaseURI;
   }
 
   function checkIfAuthorizedMinter(address minter) public view returns(bool) {
