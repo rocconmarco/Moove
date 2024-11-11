@@ -23,7 +23,6 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
   error MooveNFT__MaxSupplyCanOnlyBeInremented();
 
   uint256 public s_tokenCounter;
-  // This must be in the form ipfs://<CID>
   string private s_baseURI;
   uint256 private s_maxSupply;
 
