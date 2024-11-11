@@ -10,6 +10,8 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.s
 /**
  * A smart contract that manages the auction process for Moove NFTs
  * @author Marco Roccon
+ * @dev the contract follows the code structure suggested by Cyfrin Updraft
+ * @dev functions follow the CEI pattern to avoid potential security risks
  */
 contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
 
@@ -94,7 +96,7 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
   /// List of all the unsold NFTs to be fecthed from the front end
   UnsoldNFT[] public s_listOfUnsoldNFTs;
   
-  /** Crucial to check if the unsold NFT is for sale or not
+  /** It checks if the unsold NFT is for sale or not
    * The check has to be done via a boolean because uint256 values in mappings are inizialized
    * by default at 0, so it is not sufficient to check if the selling price of the unsold NFT
    * is set to 0
@@ -112,7 +114,12 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
   Auction[] public s_auctions;
 
   
-
+  /**
+   * @param _nftContract address of MooveNFT.sol 
+   * The constructor takes as the only parameter the contract address of MooveNFT.sol
+   * The owner of the contract is set via the Ownable.sol contract provided by OpenZeppelin
+   * All the state variables are set to their default value
+   */
   constructor(address _nftContract) Ownable(msg.sender) {
     i_nftContract = IMintableNFT(_nftContract);
     s_currentAuctionId = 0;
@@ -121,7 +128,8 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
     s_currentWinner = address(0);
   }
 
-  /** The contract does not accept direct payment
+  /** 
+   * The contract does not accept direct payment
    * This way we prefer an explicit rather than implicit approach
    * The only way to pay the contract is via the placeBid function
    */ 
@@ -170,13 +178,15 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
       revert AuctionAlpha__BidAmountLessThanMinimumBidIncrement();
     }
 
-    // If it is the first bid, there is no need to update the withdrawable amount for the previous winner
-    // since it doesn't exist yet
+    // If it is the first bid, there is no need to update the withdrawable amount for the current winner
+    // since it doesn't exist yet, otherwise the function will take the current highest bid value and assign it
+    // to the current winner in the withdrawable amount mapping, then we are ready to register the new bidder as the
+    // current winner, with the amount sent with the transaction as the current highest bid
     if(s_currentWinner != address(0)) {
       s_withdrawableAmountPerBidder[s_currentWinner] += s_currentHighestBid;
     }
 
-    // Updating all the relevant state variables
+    // Updating all the state variables and pushing a new Bid element in the array stored inside the bidHistory mapping
     s_listOfHighestBidPerUser[s_currentAuctionId][msg.sender] = actualBidAmount;
     s_currentHighestBid = actualBidAmount;
     s_currentWinner = msg.sender;
@@ -199,7 +209,8 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
    * It must be greater than zero, and less than or equal to the total withdrawable amount
    * registered in the related mapping for the sender
    * 
-   * This function can be called only when the user has been outbidded by another user
+   * This function can be called only when the user has been outbidded by another user,
+   * and, as a result, as some funds in the withdrawableAmountPerBidder mapping.
    * The user can decide to withdraw all (or part of) the funds or to add other funds and outbid the current winner
    */
   function withdrawBid(uint256 withdrawAmount) public nonReentrant {
@@ -228,11 +239,18 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
    * @param startingPrice base price decided by the owner for the NFT
    * @param minimumBidIncrement minimum difference in price between the previous and the current bid
    * 
-   * The owner of the contract starts the auction setting the starting price for the NFT
+   * The owner of the contract starts the auction by setting the starting price for the NFT
    * and the minimum bid increment for every bid to be considered valid
    * 
-   * It checks whether there is already an auction opened and if there are still NFTs to be listed
+   * The function checks whether there already is an auction opened and if there are still NFTs to be listed
    * in the auction.
+   * 
+   * All the state variables are updated with the new values
+   * @notice the state variables can store the value of one auction at a time
+   * @notice the state variables are made for an easier interaction with all the relevant information of the auction
+   * @notice there must be only one open auction at a time
+   * 
+   * Once the auction is created it is registered as an Auction instance in the auctions array
    */
   function startAuction(uint256 startingPrice, uint256 minimumBidIncrement) public onlyOwner {
     if (s_currentAuctionId > 0 && s_auctions[s_currentAuctionId - 1].isOpen) {
@@ -262,7 +280,23 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
     );
   }
 
-  // Follows CEI pattern
+
+  /**
+   * This function allows the owner of the contract to close the auction
+   * @notice the term "close" is used for an easier understanding of the finality of the function
+   * @notice it should be understood as "finalize", as the auction is per se closed
+   * @notice when the closing timestamp has been reached, since no other bids will be allowed
+   * @notice therefore, this function will register the auction as closed and assign the NFT
+   * 
+   * With regard to the NFT, there are two possible outcomes
+   * If the NFT has received at least one valid bid,
+   * it will be minted to the winner of the auction.
+   * Otherwise, the function will check if the winner is still set to address 0,
+   * which will mean that no valid bids has been received during the period of the auction
+   * This way, a new UnsoldNFT instance will be created and pushed to the list of unsold NFTs
+   * @notice the selling price of the unsold NFT will equal
+   * @notice the starting price set by the owner when starting the auction
+   */
   function closeAuction() public onlyOwner {
     if (block.timestamp < s_auctions[s_currentAuctionId - 1].closingTimestamp) {
       revert AuctionAlpha__AuctionStillOngoing();
@@ -292,6 +326,12 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
     }
   }
 
+  /**
+   * @param tokenId id of the unsold NFT to be purchased
+   * The function will check if the token is marked as listed in the isTokenListed mapping
+   * The value sent by the buyer in the transaction must be EXACTLY equal to the selling price
+   * Otherwise the function will revert for incorrect payment
+   */
   function buyUnsoldNFT(uint256 tokenId) public payable {
     if(!s_isTokenListed[tokenId]) {
       revert AuctionAlpha__TokenNotAvailable();
@@ -301,23 +341,17 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard {
       revert AuctionAlpha__IncorrectPayment();
     }
 
-    // Out of the three mappings involved in this operation
-    // We decided to only update this, to save gas
-    // As it serves as a gateway to access the other two
-    // In the other two mappings the array index and the selling price of already sold NFTs
-    // Will maintain their historical value, since they will no longer be accessible after the purchase
+    // The token will be delisted from the mapping, it will be impossible 
+    // for a second user to purchase the same token, since it will not pass
+    // the first check of this function
     s_isTokenListed[tokenId] = false;
 
     // Applying the swap & pop tecnique to delete the purchased NFT from the list of unsold NFTs
     // ATTENTION: the order of the array will be changed
-
-    // If the NFT is already the last of the list
-    // pop it out of the array
     uint256 indexToRemove = _getArrayIndexOfUnsoldNFT(tokenId);
     if(indexToRemove == s_listOfUnsoldNFTs.length - 1) {
       s_listOfUnsoldNFTs.pop();
     } else {
-      // otherwise swap it with the last NFT of the array and update the mapping
       UnsoldNFT memory lastUnsoldNFT = s_listOfUnsoldNFTs[s_listOfUnsoldNFTs.length - 1];
       s_listOfUnsoldNFTs[indexToRemove] = lastUnsoldNFT;
       s_tokenIdToArrayIndexUnsoldNFTs[lastUnsoldNFT.tokenId] = indexToRemove;
