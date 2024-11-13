@@ -55,7 +55,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetDate }) => {
   }, [targetDate]);
 
   return (
-    <div className="flex flex-col items-center justify-center py-4 min-h-full w-full">
+    <div className="flex flex-col items-center justify-center py-8 min-h-full w-full">
       <h2 className="text-2xl font-bold mb-4 h-8">Time remaining</h2>
       <div className="flex space-x-2">
         <TimeUnit value={timeLeft.days} label="Days" />

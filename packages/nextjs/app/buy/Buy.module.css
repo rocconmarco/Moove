@@ -1,8 +1,8 @@
 .nftWrapper {
     position: relative;
     transform-style: preserve-3d;
-    width: 350px;
-    height: 350px;
+    width: 200px;
+    height: 200px;
 }
 
 .img {
@@ -18,7 +18,6 @@
     z-index: 2;
 }
 
-/* Posizionamento degli span per le aree sensibili al hover */
 .img span:nth-child(1) {
     top: 0;
     left: 0;
@@ -57,7 +56,6 @@
     position: relative;
 }
 
-/* Effetti hover per ogni quadrante */
 .img span:nth-child(1):hover ~ .nft {
     transform: perspective(600px) rotateX(10deg) rotateY(-10deg);
 }

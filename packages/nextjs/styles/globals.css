@@ -40,3 +40,18 @@ p {
 .btn.btn-ghost {
   @apply shadow-none;
 }
+
+@keyframes sparkle {
+  0% {
+    opacity: 0;
+    transform: translateY(-100%) scale(0.5);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateY(-50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(0%) scale(0.5);
+  }
+}

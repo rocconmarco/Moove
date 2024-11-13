@@ -16,7 +16,17 @@ type HeaderMenuLink = {
 
 export const menuLinks: HeaderMenuLink[] = [
   {
-    label: "NFTs",
+    label: "Auctions",
+    href: "/auctions",
+  },
+
+  {
+    label: "Buy",
+    href: "/buy",
+  },
+
+  {
+    label: "My NFTs",
     href: "/nfts",
   },
 
