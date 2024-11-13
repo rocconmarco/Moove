@@ -42,7 +42,7 @@ const StyledTable: React.FC = () => {
   return (
     <section className="m-12">
       <h1 className="text-3xl text-white font-bold text-center mb-4">
-        Bid History
+        Bid history
       </h1>
       
       <div className="relative">

@@ -27,7 +27,7 @@ export const menuLinks: HeaderMenuLink[] = [
 
   {
     label: "My NFTs",
-    href: "/nfts",
+    href: "/mynfts",
   },
 
   {
