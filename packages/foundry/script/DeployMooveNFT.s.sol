@@ -7,10 +7,6 @@ import { MooveNFT } from "../contracts/MooveNFT.sol";
 
 contract DeployMooveNFT is Script {
 
-  /**
-   * @dev the broadcast starts in DeployScript.s.sol
-   * @dev we removed the startBroadcast here to avoid conflicts
-   */
   function run() external returns(MooveNFT) {
     string memory baseURI = "ipfs://bafybeiaepnzx772p5dc2vxbdm6xllkevw6uxu27ncx54cvw2kuloovazcm";
     vm.startBroadcast();

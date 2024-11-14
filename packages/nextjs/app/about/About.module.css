@@ -1,0 +1,12 @@
+.title {
+    animation: appearWhenReload 2s linear forwards;
+  }
+  
+  @keyframes appearWhenReload {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }

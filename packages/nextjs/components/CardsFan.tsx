@@ -81,7 +81,7 @@ export const CardsFan = () => {
                 <img src="/favicon.png" className="h-[40%] sm:h-[55%] md:h-[80%]" alt="favicon" />
               </div>
 
-              <div className="sm:w-[170px] sm:h-[170px] md:w-[250px] md:h-[250px]">
+              <div className="sm:w-[170px] sm:h-[170px] md:w-[253px] md:h-[253px]">
                 <img src={`/nft-images/${getName(index)}.jpg`} alt={getName(index)} />
               </div>
             </div>
