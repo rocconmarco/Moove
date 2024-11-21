@@ -1,22 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import styles from "./HomePage.module.css";
 import type { NextPage } from "next";
-import { MdKeyboardDoubleArrowRight } from "react-icons/md";
 import { useAccount } from "wagmi";
-import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { CardsFan } from "~~/components/CardsFan";
-import { Footer } from "~~/components/Footer";
 import { ImageSlider } from "~~/components/ImageSlider";
-import { Address } from "~~/components/scaffold-eth";
 
 const Home: NextPage = () => {
   const { address: connectedAddress } = useAccount();
 
   return (
-    <div className="relative min-h-screen w-full">
-      <div className="relative z-10 flex items-center flex-col flex-grow pt-8">
+    <>
+      <div className="flex flex-col items-center flex-grow z-10 pt-8">
         <div className="px-5">
           <h1 className={`${styles.title} text-center`}>
             <span className="block text-3xl sm:text-5xl mb-2 text-white shadow-inner">
@@ -100,7 +95,9 @@ const Home: NextPage = () => {
         <div className="flex flex-col w-full px-5 lg:px-20 my-40 h-[600px] items-center">
           <div className={`${styles.description} opacity-0 flex flex-col w-full pt-4`}>
             <h2>
-              <span className="block text-3xl sm:text-5xl mb-2 text-center text-white shadow-inner">Be part of the change,</span>
+              <span className="block text-3xl sm:text-5xl mb-2 text-center text-white shadow-inner">
+                Be part of the change,
+              </span>
               <span className="block text-5xl sm:text-7xl text-center font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-slate-200 to-gray-600 drop-shadow-[0_10px_8px_rgba(0,0,0,0.8)] pb-2">
                 join the community
               </span>
@@ -125,9 +122,8 @@ const Home: NextPage = () => {
             </div>
           </div>
         </div>
-        <Footer />
       </div>
-    </div>
+    </>
   );
 };
 

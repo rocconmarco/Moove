@@ -47,7 +47,7 @@ export const NETWORKS_EXTRA_DATA: Record<string, ChainAttributes> = {
     color: "#ff8b9e",
   },
   [chains.sepolia.id]: {
-    color: ["#5f4bb6", "#87ff65"],
+    color: "#e885ff",
   },
   [chains.gnosis.id]: {
     color: "#48a9a6",

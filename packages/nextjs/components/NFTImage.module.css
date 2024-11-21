@@ -1,0 +1,73 @@
+.nftWrapper {
+    position: relative;
+    transform-style: preserve-3d;
+    width: 350px;
+    height: 350px;
+}
+
+.img {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.img span {
+    width: 50%;
+    height: 50%;
+    position: absolute;
+    z-index: 2;
+}
+
+.img span:nth-child(1) {
+    top: 0;
+    left: 0;
+}
+
+.img span:nth-child(2) {
+    top: 0;
+    right: 0;
+}
+
+.img span:nth-child(3) {
+    bottom: 0;
+    left: 0;
+}
+
+.img span:nth-child(4) {
+    bottom: 0;
+    right: 0;
+}
+
+.nft {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 15px;
+    box-shadow: 
+        0 5px 15px rgba(0,0,0,0.5), 
+        0 0 0 1px rgba(255,255,255,0.1), 
+        inset 0 0 20px rgba(0,0,0,0.2);  
+    background: rgba(255,255,255,0.05);  
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: transform 0.2s;
+    z-index: 1;
+    position: relative;
+}
+
+.img span:nth-child(1):hover ~ .nft {
+    transform: perspective(600px) rotateX(10deg) rotateY(-10deg);
+}
+
+.img span:nth-child(2):hover ~ .nft {
+    transform: perspective(600px) rotateX(10deg) rotateY(10deg);
+}
+
+.img span:nth-child(3):hover ~ .nft {
+    transform: perspective(600px) rotateX(-10deg) rotateY(-10deg);
+}
+
+.img span:nth-child(4):hover ~ .nft {
+    transform: perspective(600px) rotateX(-10deg) rotateY(10deg);
+}

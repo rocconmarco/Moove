@@ -5,7 +5,7 @@ import Image from "next/image";
 import styles from "./About.module.css";
 import type { NextPage } from "next";
 
-const MyNFTs: NextPage = () => {
+const About: NextPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleNFTClick = () => {
@@ -48,8 +48,15 @@ const MyNFTs: NextPage = () => {
           vitae perferendis accusamus vel minima ullam consectetur facilis voluptate, totam ipsam repellat quasi!
         </p>
       </div>
+      <div className="relative z-10 min-h-screen -mt-[64px] flex flex-col items-center justify-center space-x-10 space-y-4 flex-grow pt-8 px-40">
+        <div className="flex items-center justify-center space-x-2 ">
+          <Image alt="Marco Roccon logo" className={`${styles.title} opacity-0`} width={200} height={200} src="/LogoPNG.png" />
+          <p className="text-xl font-bold pr-9">X</p>
+          <Image alt="start2impact logo" className={`${styles.title} opacity-0 ml-56`} width={400} height={75} src="/s2i-logo.png" />
+        </div>
+      </div>
     </>
   );
 };
 
-export default MyNFTs;
+export default About;

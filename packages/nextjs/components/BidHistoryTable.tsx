@@ -1,23 +1,25 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
+import { useReadContract } from "wagmi";
+import { formatEther } from "viem"; 
+import { auctionAlphaContract } from "~~/contracts/contractsInfo";
 
-interface TableData {
-  address: string;
-  bidAmount: string;
-  timestamp: string;
+
+interface Bid {
+  bidder: string;
+  amount: bigint;
+  timestamp: bigint;
 }
 
-const StyledTable: React.FC = () => {
-  // Esempio di dati
-  const sampleData: TableData[] = [{
-    address: "0x09213u843yre983bfu",
-    bidAmount: "2 ETH",
-    timestamp: "78398423798",
-  }, {
-    address: "0x09234983457heh98983bfu",
-    bidAmount: "1.5 ETH",
-    timestamp: "78398424568",
-  }];
+const StyledTable: React.FC<{ auctionId: bigint }> = ({ auctionId }) => {
+  const { data: bidsArray, isLoading, isError } = useReadContract({
+    ...auctionAlphaContract,
+    functionName: "getListOfBids",
+    args: [auctionId],
+    query: {
+      refetchInterval: 5000,
+    }
+  })
 
   // Gestione scrollbar
   useEffect(() => {
@@ -34,10 +36,35 @@ const StyledTable: React.FC = () => {
     };
 
     window.addEventListener('resize', handleResize);
-    handleResize(); // Chiamata iniziale
+    handleResize();
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  if(isLoading) {
+    return (
+      <div className="text-center text-white my-8">
+        Loading bid history...
+      </div>
+    );
+  }
+
+  if(!bidsArray || bidsArray.length === 0) {
+    return (
+      <div className="text-center text-white my-8">
+        No bids have been placed yet
+      </div>
+    );
+  }
+
+  const formatTimestamp = (timestamp: bigint) => {
+    const date = new Date(Number(timestamp) * 1000);
+    return date.toLocaleDateString();
+  }
+
+  const formatAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  }
 
   return (
     <section className="m-12">
@@ -63,16 +90,16 @@ const StyledTable: React.FC = () => {
         <div className="tbl-content h-[300px] overflow-x-auto border border-white/30">
           <table className="w-full table-fixed">
             <tbody>
-              {sampleData.map((item, index) => (
+              {[...bidsArray].reverse().map((bid: Bid, index: number) => (
                 <tr key={index}>
                   <td className="px-4 py-4 text-left align-middle font-light text-xs text-white border-b border-white/10">
-                    {item.address}
+                    {formatAddress(bid.bidder)}
                   </td>
                   <td className="px-4 py-4 text-left align-middle font-light text-xs text-white border-b border-white/10">
-                    {item.bidAmount}
+                    {formatEther(bid.amount)} ETH
                   </td>
                   <td className="px-4 py-4 text-left align-middle font-light text-xs text-white border-b border-white/10">
-                    {item.timestamp}
+                    {formatTimestamp(bid.timestamp)}
                   </td>
                 </tr>
               ))}
