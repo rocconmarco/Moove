@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./Auctions.module.css";
+import clsx from "clsx";
 import type { NextPage } from "next";
-import { formatEther } from "viem";
-import { useReadContract, useReadContracts } from "wagmi";
+import { formatEther, parseEther } from "viem";
+import { useReadContract, useReadContracts, useWriteContract } from "wagmi";
 import BidHistoryTable from "~~/components/BidHistoryTable";
 import CountdownTimer from "~~/components/CountdownTimer";
 import InfoIcon from "~~/components/InfoIcon";
@@ -82,10 +83,10 @@ const Auctions: NextPage = () => {
 
   const { data: highestBid } = useReadContract({
     ...auctionAlphaContract,
-    functionName: "s_currentHighestBid", 
+    functionName: "s_currentHighestBid",
     query: {
       refetchInterval: 5000,
-    }
+    },
   });
 
   const { data: auctionId } = useReadContract({
@@ -104,16 +105,36 @@ const Auctions: NextPage = () => {
     args: [BigInt(nftId ?? 0)],
   });
 
+  const { writeContract, isSuccess } = useWriteContract();
+
+  useEffect(() => {
+    if (isSuccess) {
+      setUserBid("");
+      setBidError(null);
+    }
+  }, [isSuccess]);
+
+  const handlePlaceBid = () => {
+    writeContract({
+      ...auctionAlphaContract,
+      functionName: "placeBid",
+      value: parseEther(userBid),
+    });
+  };
+
   const startingPrice: string = formatEther(auction?.[4] ?? BigInt(0)).toString();
   const startingPriceInUsd: string = (Number(formatEther(auction?.[4] ?? BigInt(0))) * nativeCurrencyPrice).toFixed(2);
   const minimumBidIncrement: string = formatEther(auction?.[5] ?? BigInt(0)).toString();
   const minimumBidIncrementInEth: number = Number(minimumBidIncrement);
-  const minimumBidIncrementInUsd: string = (Number(formatEther(auction?.[5] ?? BigInt(0))) * nativeCurrencyPrice).toFixed(2);
+  const minimumBidIncrementInUsd: string = (
+    Number(formatEther(auction?.[5] ?? BigInt(0))) * nativeCurrencyPrice
+  ).toFixed(2);
   const currentHighestBid: string = formatEther(highestBid ?? BigInt(0)).toString();
   const currentHighestBidInEth: number = Number(currentHighestBid);
-  const currentHighestBidInUsd: string = (Number(formatEther(highestBid ?? BigInt(0))) * nativeCurrencyPrice).toFixed(2);
-  const minimumBidAmount: string = formatEther(((highestBid ?? BigInt(0)) + (auction?.[5] ?? BigInt(0))));
-  
+  const currentHighestBidInUsd: string = (Number(formatEther(highestBid ?? BigInt(0))) * nativeCurrencyPrice).toFixed(
+    2,
+  );
+  const minimumBidAmount: string = formatEther((highestBid ?? BigInt(0)) + (auction?.[5] ?? BigInt(0)));
 
   return (
     <>
@@ -167,21 +188,39 @@ const Auctions: NextPage = () => {
                       placeholder={minimumBidAmount}
                     />
                     <p className="text-xl text-lightPurple font-bold">ETH</p>
-                    <p className="text-sm mt-0 mb-0 tracking-wide italic">{userBid && `$${((Number(userBid) * nativeCurrencyPrice).toFixed(2))}`}</p>
+                    <p className="text-sm mt-0 mb-0 tracking-wide italic">
+                      {userBid && `$${(Number(userBid) * nativeCurrencyPrice).toFixed(2)}`}
+                    </p>
                   </div>
                   {bidError && <p className="text-red-500 text-sm">{bidError}</p>}
                 </div>
 
                 <div className="relative inline-flex group">
-                  <div className="absolute transition-all duration-500 opacity-70 -inset-px bg-gradient-to-r from-darkPurpleAlt via-darkPink to-darkPurpleAlt rounded-xl blur-lg group-hover:opacity-100 group-hover:-inset-1 group-hover:duration-200 animate-tilt"></div>
-                  <a
-                    href="#"
+                  {/* Glow */}
+                  <div
+                    className={clsx(
+                      "absolute rounded-xl blur-lg z-0 transition-all",
+                      bidError === null && userBid !== ""
+                        ? "opacity-70 -inset-px bg-gradient-to-r from-darkPurpleAlt via-darkPink to-darkPurpleAlt group-hover:opacity-100 group-hover:-inset-1 duration-500 animate-tilt"
+                        : "opacity-0",
+                    )}
+                  ></div>
+
+                  {/* Button */}
+                  <button
                     title="Place your bid"
-                    className="relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
-                    role="button"
+                    className={clsx(
+                      "relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 z-10",
+                      {
+                        "opacity-50 cursor-not-allowed": bidError !== null || userBid === "",
+                        "hover:bg-gray-800 hover:scale-105": bidError === null && userBid !== "",
+                      },
+                    )}
+                    disabled={bidError !== null || userBid === ""}
+                    onClick={handlePlaceBid}
                   >
                     Place your bid
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
