@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import styles from "./Auctions.module.css";
 import clsx from "clsx";
 import type { NextPage } from "next";
+import { isUndefined } from "util";
 import { formatEther, parseEther } from "viem";
-import { useReadContract, useReadContracts, useWriteContract } from "wagmi";
+import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import BidHistoryTable from "~~/components/BidHistoryTable";
 import CountdownTimer from "~~/components/CountdownTimer";
 import InfoIcon from "~~/components/InfoIcon";
@@ -13,13 +13,20 @@ import NFTImage from "~~/components/NFTImage";
 import NFTName from "~~/components/NFTName";
 import { auctionAlphaContract, mooveNFTContract } from "~~/contracts/contractsInfo";
 import { useGlobalState } from "~~/services/store/store";
+import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
 
 const Auctions: NextPage = () => {
   const [userBid, setUserBid] = useState<string>("");
   const [bidError, setBidError] = useState<string | null>(null);
+  const [balance, setBalance] = useState<bigint | null>(null);
+  const [actualBid, setActualBid] = useState<string>("");
+  const [actualBidMessage, setActualBidMessage] = useState<string | null>(null);
+
+  console.log("Current balance: ", balance);
 
   const nativeCurrencyPrice = useGlobalState(state => state.nativeCurrency.price);
-  const isNativeCurrencyPriceFetching = useGlobalState(state => state.nativeCurrency.isFetching);
+
+  const currentAccount = useAccount();
 
   const handleBidChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let bidValue = e.target.value;
@@ -31,14 +38,28 @@ const Auctions: NextPage = () => {
     setUserBid(bidValue);
 
     const parsedBidValue = parseFloat(bidValue);
+    const bidValueInWei = parseEther(bidValue);
+    console.log("bidValueInWei: ", bidValueInWei);
+    const differenceBetweenBidAndBalance = balance && (bidValueInWei - balance);
+    console.log("differenceBetweenBidAndBalance: ", differenceBetweenBidAndBalance);
     const minimumBid = parseFloat((currentHighestBidInEth + minimumBidIncrementInEth).toFixed(12));
+
+    if (balance) {
+      setActualBid(formatEther(differenceBetweenBidAndBalance ?? 0n));
+      setActualBidMessage(`You only need to send ${formatEther(differenceBetweenBidAndBalance ?? 0n)} ETH`);
+    }
 
     if (bidValue === "") {
       setBidError(null);
+      setActualBidMessage(null);
     } else if (isNaN(parsedBidValue)) {
       setBidError("Please enter a valid number");
     } else if (parsedBidValue < minimumBid) {
       setBidError(`Bid must be at least ${minimumBidAmount} ETH`);
+    } else if (currentAccount.address === currentWinner) {
+      setBidError("You are already the highest bidder");
+    } else if (!currentAccount.address) {
+      setBidError("Must connect wallet to place bids");
     } else {
       setBidError(null);
     }
@@ -105,6 +126,20 @@ const Auctions: NextPage = () => {
     args: [BigInt(nftId ?? 0)],
   });
 
+  const { data: currentWinner } = useReadContract({
+    ...auctionAlphaContract,
+    functionName: "s_currentWinner",
+  });
+
+  const { data: userBalance } = useReadContract({
+    ...auctionAlphaContract,
+    functionName: "s_withdrawableAmountPerBidder",
+    args: [currentAccount.address ?? ZERO_ADDRESS ],
+    query: {
+      refetchInterval: 5000,
+    },
+  })
+
   const { writeContract, isSuccess } = useWriteContract();
 
   useEffect(() => {
@@ -112,7 +147,13 @@ const Auctions: NextPage = () => {
       setUserBid("");
       setBidError(null);
     }
+
+    
   }, [isSuccess]);
+
+  useEffect(() => {
+    setBalance(userBalance ?? null);
+  }, [userBalance])
 
   const handlePlaceBid = () => {
     writeContract({
@@ -193,30 +234,45 @@ const Auctions: NextPage = () => {
                     </p>
                   </div>
                   {bidError && <p className="text-red-500 text-sm">{bidError}</p>}
+                  {actualBidMessage && userBid && !bidError && <p className="text-green-500 text-sm">{actualBidMessage}</p>}
                 </div>
 
                 <div className="relative inline-flex group">
-                  {/* Glow */}
                   <div
                     className={clsx(
                       "absolute rounded-xl blur-lg z-0 transition-all",
-                      bidError === null && userBid !== ""
+                      bidError === null &&
+                        userBid !== "" &&
+                        currentAccount.address &&
+                        currentAccount.address !== currentWinner
                         ? "opacity-70 -inset-px bg-gradient-to-r from-darkPurpleAlt via-darkPink to-darkPurpleAlt group-hover:opacity-100 group-hover:-inset-1 duration-500 animate-tilt"
                         : "opacity-0",
                     )}
                   ></div>
 
-                  {/* Button */}
                   <button
                     title="Place your bid"
                     className={clsx(
                       "relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 z-10",
                       {
-                        "opacity-50 cursor-not-allowed": bidError !== null || userBid === "",
-                        "hover:bg-gray-800 hover:scale-105": bidError === null && userBid !== "",
+                        "opacity-50 cursor-not-allowed":
+                          bidError !== null ||
+                          userBid === "" ||
+                          !currentAccount.address ||
+                          currentAccount.address === currentWinner,
+                        "hover:bg-gray-800 hover:scale-105":
+                          bidError === null &&
+                          userBid !== "" &&
+                          currentAccount.address &&
+                          currentAccount.address !== currentWinner,
                       },
                     )}
-                    disabled={bidError !== null || userBid === ""}
+                    disabled={
+                      bidError !== null ||
+                      userBid === "" ||
+                      !currentAccount.address ||
+                      currentAccount.address === currentWinner
+                    }
                     onClick={handlePlaceBid}
                   >
                     Place your bid
