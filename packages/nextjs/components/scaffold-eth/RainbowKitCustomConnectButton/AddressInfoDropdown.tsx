@@ -11,11 +11,13 @@ import {
   CheckCircleIcon,
   ChevronDownIcon,
   DocumentDuplicateIcon,
-  QrCodeIcon,
+  LinkIcon,
+  BanknotesIcon
 } from "@heroicons/react/24/outline";
 import { BlockieAvatar, isENS } from "~~/components/scaffold-eth";
 import { useOutsideClick } from "~~/hooks/scaffold-eth";
 import { getTargetNetworks } from "~~/utils/scaffold-eth";
+import { useNetworkColor } from "~~/hooks/scaffold-eth";
 
 const allowedNetworks = getTargetNetworks();
 
@@ -24,6 +26,7 @@ type AddressInfoDropdownProps = {
   blockExplorerAddressLink: string | undefined;
   displayName: string;
   ensAvatar?: string;
+  chain?: string;
 };
 
 export const AddressInfoDropdown = ({
@@ -31,11 +34,14 @@ export const AddressInfoDropdown = ({
   ensAvatar,
   displayName,
   blockExplorerAddressLink,
+  chain
 }: AddressInfoDropdownProps) => {
   const { disconnect } = useDisconnect();
   const checkSumAddress = getAddress(address);
 
   const [addressCopied, setAddressCopied] = useState(false);
+
+  const networkColor = useNetworkColor();
 
   const [selectingNetwork, setSelectingNetwork] = useState(false);
   const dropdownRef = useRef<HTMLDetailsElement>(null);
@@ -60,6 +66,12 @@ export const AddressInfoDropdown = ({
           className="dropdown-content menu z-[2] p-2 mt-2 shadow-center shadow-accent bg-base-200 rounded-box gap-1"
         >
           <NetworkOptions hidden={!selectingNetwork} />
+          <li className={selectingNetwork ? "hidden" : ""}>
+            <button className="menu-item btn-sm !rounded-xl flex gap-3 py-3" type="button">
+              <LinkIcon className="h-6 w-4 ml-2 sm:ml-0" />
+              <p>Connected on <span style={{color: networkColor}}>{chain}</span></p>
+            </button>
+          </li>
           <li className={selectingNetwork ? "hidden" : ""}>
             {addressCopied ? (
               <div className="btn-sm !rounded-xl flex gap-3 py-3">
@@ -99,6 +111,18 @@ export const AddressInfoDropdown = ({
                 className="whitespace-nowrap"
               >
                 View on Block Explorer
+              </a>
+            </button>
+          </li>
+          <li className={selectingNetwork ? "hidden" : ""}>
+            <button className="menu-item btn-sm !rounded-xl flex gap-3 py-3" type="button">
+              <BanknotesIcon className="h-6 w-4 ml-2 sm:ml-0" />
+              <a
+                href={"/withdraw"}
+                rel="noopener noreferrer"
+                className="whitespace-nowrap"
+              >
+                Withdraw funds
               </a>
             </button>
           </li>

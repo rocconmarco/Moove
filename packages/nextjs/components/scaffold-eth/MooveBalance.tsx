@@ -1,10 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Address, formatEther } from "viem";
+import { useAccount, useReadContract } from "wagmi";
+import { auctionAlphaContract } from "~~/contracts/contractsInfo";
 import { useDisplayUsdMode } from "~~/hooks/scaffold-eth/useDisplayUsdMode";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 import { useWatchBalance } from "~~/hooks/scaffold-eth/useWatchBalance";
 import { useGlobalState } from "~~/services/store/store";
+import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
 
 type BalanceProps = {
   address?: Address;
@@ -15,10 +19,27 @@ type BalanceProps = {
 /**
  * Display (ETH & USD) balance of an ETH address.
  */
-export const Balance = ({ address, className = "", usdMode }: BalanceProps) => {
+export const MooveBalance = ({ address, className = "", usdMode }: BalanceProps) => {
   const { targetNetwork } = useTargetNetwork();
   const nativeCurrencyPrice = useGlobalState(state => state.nativeCurrency.price);
   const isNativeCurrencyPriceFetching = useGlobalState(state => state.nativeCurrency.isFetching);
+
+  const [mooveBalance, setMooveBalance] = useState<bigint | null>(null);
+
+  const currentAccount = useAccount();
+
+  const { data: userBalance } = useReadContract({
+    ...auctionAlphaContract,
+    functionName: "s_withdrawableAmountPerBidder",
+    args: [currentAccount.address ?? ZERO_ADDRESS],
+    query: {
+      refetchInterval: 5000,
+    },
+  });
+
+  useEffect(() => {
+    setMooveBalance(userBalance ?? null);
+  }, [userBalance]);
 
   const {
     data: balance,
@@ -48,7 +69,7 @@ export const Balance = ({ address, className = "", usdMode }: BalanceProps) => {
     );
   }
 
-  const formattedBalance = balance ? Number(formatEther(balance.value)) : 0;
+  const formattedBalance = userBalance ? Number(formatEther(userBalance)) : 0;
 
   return (
     <button

@@ -5,7 +5,7 @@ import clsx from "clsx";
 import type { NextPage } from "next";
 import { isUndefined } from "util";
 import { formatEther, parseEther } from "viem";
-import { useAccount, useReadContract, useWriteContract } from "wagmi";
+import { useAccount, useBalance, useReadContract, useWriteContract } from "wagmi";
 import BidHistoryTable from "~~/components/BidHistoryTable";
 import CountdownTimer from "~~/components/CountdownTimer";
 import InfoIcon from "~~/components/InfoIcon";
@@ -22,11 +22,13 @@ const Auctions: NextPage = () => {
   const [actualBid, setActualBid] = useState<string>("");
   const [actualBidMessage, setActualBidMessage] = useState<string | null>(null);
 
-  console.log("Current balance: ", balance);
-
   const nativeCurrencyPrice = useGlobalState(state => state.nativeCurrency.price);
 
   const currentAccount = useAccount();
+  const { address } = useAccount();
+  const { data: walletBalance, isLoading } = useBalance({
+    address,
+  });
 
   const handleBidChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let bidValue = e.target.value;
@@ -39,10 +41,13 @@ const Auctions: NextPage = () => {
 
     const parsedBidValue = parseFloat(bidValue);
     const bidValueInWei = parseEther(bidValue);
-    console.log("bidValueInWei: ", bidValueInWei);
-    const differenceBetweenBidAndBalance = balance && (bidValueInWei - balance);
-    console.log("differenceBetweenBidAndBalance: ", differenceBetweenBidAndBalance);
+    const differenceBetweenBidAndBalance = balance && bidValueInWei - balance;
     const minimumBid = parseFloat((currentHighestBidInEth + minimumBidIncrementInEth).toFixed(12));
+    const availableFunds = (walletBalance?.value ?? 0n) + (balance ?? 0n);
+
+    console.log("Wallet balance: ", walletBalance?.value);
+    console.log("Moove balance: ", balance);
+    console.log("Available funds: ", availableFunds);
 
     if (balance) {
       setActualBid(formatEther(differenceBetweenBidAndBalance ?? 0n));
@@ -52,14 +57,18 @@ const Auctions: NextPage = () => {
     if (bidValue === "") {
       setBidError(null);
       setActualBidMessage(null);
+    } else if (!currentAccount.address) {
+      setBidError("Connect wallet to place bids");
+    } else if (currentAccount.address === currentWinner) {
+      setBidError("You are already the highest bidder");
     } else if (isNaN(parsedBidValue)) {
       setBidError("Please enter a valid number");
     } else if (parsedBidValue < minimumBid) {
       setBidError(`Bid must be at least ${minimumBidAmount} ETH`);
-    } else if (currentAccount.address === currentWinner) {
-      setBidError("You are already the highest bidder");
+    } else if (bidValueInWei >= (availableFunds ?? 0n)) {
+      setBidError(`Insufficient funds`);
     } else if (!currentAccount.address) {
-      setBidError("Must connect wallet to place bids");
+      setBidError("Connect wallet to place bids");
     } else {
       setBidError(null);
     }
@@ -96,10 +105,22 @@ const Auctions: NextPage = () => {
     }
   };
 
+  const { data: currentAuctionId } = useReadContract({
+    ...auctionAlphaContract,
+    functionName: "s_currentAuctionId",
+    query: {
+      refetchInterval: 5000,
+    },
+  });
+
   const { data: auction } = useReadContract({
     ...auctionAlphaContract,
     functionName: "s_auctions",
-    args: [BigInt(0)],
+    args: currentAuctionId ? [BigInt(Number(currentAuctionId) - 1)] : undefined,
+    query: {
+      enabled: Boolean(currentAuctionId),
+      refetchInterval: 5000,
+    },
   });
 
   const { data: highestBid } = useReadContract({
@@ -113,32 +134,44 @@ const Auctions: NextPage = () => {
   const { data: auctionId } = useReadContract({
     ...auctionAlphaContract,
     functionName: "s_currentAuctionId",
+    query: {
+      refetchInterval: 5000,
+    },
   });
 
   const { data: nftId } = useReadContract({
     ...auctionAlphaContract,
     functionName: "s_currentNftId",
+    query: {
+      refetchInterval: 5000,
+    },
   });
 
   const { data: tokenURI } = useReadContract({
     ...mooveNFTContract,
     functionName: "tokenURI",
     args: [BigInt(nftId ?? 0)],
+    query: {
+      refetchInterval: 5000,
+    },
   });
 
   const { data: currentWinner } = useReadContract({
     ...auctionAlphaContract,
     functionName: "s_currentWinner",
+    query: {
+      refetchInterval: 5000,
+    },
   });
 
   const { data: userBalance } = useReadContract({
     ...auctionAlphaContract,
     functionName: "s_withdrawableAmountPerBidder",
-    args: [currentAccount.address ?? ZERO_ADDRESS ],
+    args: [currentAccount.address ?? ZERO_ADDRESS],
     query: {
       refetchInterval: 5000,
     },
-  })
+  });
 
   const { writeContract, isSuccess } = useWriteContract();
 
@@ -147,19 +180,17 @@ const Auctions: NextPage = () => {
       setUserBid("");
       setBidError(null);
     }
-
-    
   }, [isSuccess]);
 
   useEffect(() => {
     setBalance(userBalance ?? null);
-  }, [userBalance])
+  }, [userBalance]);
 
   const handlePlaceBid = () => {
     writeContract({
       ...auctionAlphaContract,
       functionName: "placeBid",
-      value: parseEther(userBid),
+      value: balance ? parseEther(actualBid) : parseEther(userBid),
     });
   };
 
@@ -218,7 +249,11 @@ const Auctions: NextPage = () => {
 
               <div className="flex flex-col items-start justify-center space-y-2 w-[400px]">
                 <div className="flex flex-col space-y-0">
-                  <div className={`flex items-center space-x-4 relative ${bidError ? `mb-0` : `mb-3`}`}>
+                  <div
+                    className={`flex items-center space-x-4 relative ${
+                      bidError || (actualBidMessage && userBid && !bidError) ? `mb-0` : `mb-3`
+                    }`}
+                  >
                     <input
                       type="text"
                       pattern="^\d*(\.\d+)?$"
@@ -228,13 +263,28 @@ const Auctions: NextPage = () => {
                       className="peer border border-darkPurple block text-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none h-[50px] w-full rounded bg-transparent px-3 py-[0.32rem] leading-[1.6] focus:outline-none"
                       placeholder={minimumBidAmount}
                     />
-                    <p className="text-xl text-lightPurple font-bold">ETH</p>
+                    <p className="text-2xl text-lightPurple font-bold">ETH</p>
                     <p className="text-sm mt-0 mb-0 tracking-wide italic">
                       {userBid && `$${(Number(userBid) * nativeCurrencyPrice).toFixed(2)}`}
                     </p>
                   </div>
-                  {bidError && <p className="text-red-500 text-sm">{bidError}</p>}
-                  {actualBidMessage && userBid && !bidError && <p className="text-green-500 text-sm">{actualBidMessage}</p>}
+                  <div className="flex items-center space-x-2 z-50">
+                    {bidError && <p className="text-red-500 text-sm my-0">{bidError}</p>}
+                    {bidError === "Insufficient funds" && (
+                      <InfoIcon text="This message may appear even though the amount is lower than the total balance due to approximation." />
+                    )}
+                  </div>
+
+                  {actualBidMessage && userBid && !bidError && (
+                    <div className="flex items-center space-x-2">
+                      <p className="text-green-500 text-sm my-0">{actualBidMessage}</p>
+                      <InfoIcon
+                        text={`Your current Moove balance is ${formatEther(
+                          balance ?? BigInt(0),
+                        )} ETH. You will only need to add the difference to place the intended bid. `}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="relative inline-flex group">
@@ -253,7 +303,7 @@ const Auctions: NextPage = () => {
                   <button
                     title="Place your bid"
                     className={clsx(
-                      "relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 z-10",
+                      "relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl outline-none z-10 active:bg-gray-700",
                       {
                         "opacity-50 cursor-not-allowed":
                           bidError !== null ||

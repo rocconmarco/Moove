@@ -2,6 +2,7 @@
 
 // @refresh reset
 import { Balance } from "../Balance";
+import { MooveBalance } from "../MooveBalance";
 import { AddressInfoDropdown } from "./AddressInfoDropdown";
 import { WrongNetworkDropdown } from "./WrongNetworkDropdown";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
@@ -42,17 +43,23 @@ export const RainbowKitCustomConnectButton = () => {
 
               return (
                 <>
-                  <div className="flex flex-col items-center mr-1">
-                    <Balance address={account.address as Address} className="min-h-0 h-auto" />
-                    <span className="text-xs" style={{ color: networkColor }}>
-                      {chain.name}
-                    </span>
+                  <div className="flex space-x-1 mr-2">
+                    <div className="flex flex-col w-24 items-center">
+                      <span className="text-xs text-pink">Moove balance</span>
+                      <MooveBalance address={account.address as Address} className="min-h-0 h-auto" />
+                    </div>
+                    <div className="flex flex-col w-24 items-center">
+                      <span className="text-xs text-pink">Wallet balance</span>
+                      <Balance address={account.address as Address} className="min-h-0 h-auto" />
+                    </div>
                   </div>
+
                   <AddressInfoDropdown
                     address={account.address as Address}
                     displayName={account.displayName}
                     ensAvatar={account.ensAvatar}
                     blockExplorerAddressLink={blockExplorerAddressLink}
+                    chain={chain.name}
                   />
                 </>
               );
