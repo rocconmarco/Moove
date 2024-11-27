@@ -19,7 +19,7 @@ export const ImageSlider = () => {
           <img src="/nft-images/boat.jpg" alt="boat"></img>
         </div>
         <div className={styles.item} style={{"--position" : 2} as ItemStyle}>
-          <img src="/nft-images/bycicle.jpg" alt="bycicle"></img>
+          <img src="/nft-images/bicycle.jpg" alt="bycicle"></img>
         </div>
         <div className={styles.item} style={{"--position" : 3} as ItemStyle}>
           <img src="/nft-images/firetruck.jpg" alt="firetruck"></img>

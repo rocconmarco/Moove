@@ -4,7 +4,8 @@ import React, { useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bars3Icon, BugAntIcon } from "@heroicons/react/24/outline";
+import { useRouter } from "next/router";
+import { Bars3Icon, BugAntIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useOutsideClick } from "~~/hooks/scaffold-eth";
 
@@ -81,15 +82,37 @@ export const Header = () => {
   return (
     <div className="sticky top-0 navbar bg-black bg-opacity-50 backdrop-blur-sm min-h-0 flex-shrink-0 justify-between z-20 px-0 sm:px-2">
       <div className="navbar-start w-auto lg:w-1/2">
+        <Link
+          href="/"
+          passHref
+          className="lg:hidden items-center gap-2 ml-4 shrink-0"
+          onClick={e => {
+            if (window.location.pathname === "/") {
+              e.preventDefault();
+              window.location.reload();
+            }
+          }}
+        >
+          <Image alt="Moove logo" className="cursor-pointer" width={50} height={50} src="/moove-app.png" />
+        </Link>
         <div className="lg:hidden dropdown" ref={burgerMenuRef}>
           <label
             tabIndex={0}
-            className={`ml-1 btn btn-ghost ${isDrawerOpen ? "hover:bg-secondary" : "hover:bg-transparent"}`}
+            className={`ml-1 rounded-full cursor-pointer hover:bg-[#323F61] flex items-center justify-center`}
+            style={{
+              width: "32px",
+              height: "32px",
+            }}
             onClick={() => {
               setIsDrawerOpen(prevIsOpenState => !prevIsOpenState);
             }}
           >
-            <Bars3Icon className="h-1/2" />
+            <ChevronDownIcon
+              style={{
+                width: "16px",
+                height: "16px",
+              }}
+            />
           </label>
           {isDrawerOpen && (
             <ul
@@ -103,8 +126,18 @@ export const Header = () => {
             </ul>
           )}
         </div>
-        <Link href="/" passHref className="hidden lg:flex items-center gap-2 ml-4 mr-6 shrink-0">
-            <Image alt="Moove logo" className="cursor-pointer" width={160} height={30} src="/logo.png" />
+        <Link
+          href="/"
+          passHref
+          className="hidden lg:flex items-center gap-2 ml-4 mr-6 shrink-0"
+          onClick={e => {
+            if (window.location.pathname === "/") {
+              e.preventDefault();
+              window.location.reload();
+            }
+          }}
+        >
+          <Image alt="Moove logo" className="cursor-pointer" width={160} height={30} src="/logo.png" />
         </Link>
         <ul className="hidden lg:flex lg:flex-nowrap menu menu-horizontal px-1 gap-2">
           <HeaderMenuLinks />
