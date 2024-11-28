@@ -93,7 +93,7 @@ export const Header = () => {
             }
           }}
         >
-          <Image alt="Moove logo" className="cursor-pointer" width={50} height={50} src="/moove-app.png" />
+          <Image alt="Moove logo" className="cursor-pointer" width={50} height={50} src="/moove-app-no-bg.png" />
         </Link>
         <div className="lg:hidden dropdown" ref={burgerMenuRef}>
           <label

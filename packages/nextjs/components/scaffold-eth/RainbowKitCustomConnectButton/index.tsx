@@ -43,7 +43,7 @@ export const RainbowKitCustomConnectButton = () => {
 
               return (
                 <>
-                  <div className="flex space-x-1 mr-2">
+                  <div className="hidden md:flex space-x-1 mr-2">
                     <div className="flex flex-col w-24 items-center">
                       <span className="text-xs text-pink">Moove balance</span>
                       <MooveBalance address={account.address as Address} className="min-h-0 h-auto" />

@@ -59,7 +59,14 @@ const StyledTable: React.FC<{ auctionId: bigint }> = ({ auctionId }) => {
 
   const formatTimestamp = (timestamp: bigint) => {
     const date = new Date(Number(timestamp) * 1000);
-    return date.toLocaleDateString();
+    return date.toLocaleDateString("it-IT", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
   }
 
   const formatAddress = (address: string) => {
@@ -74,7 +81,7 @@ const StyledTable: React.FC<{ auctionId: bigint }> = ({ auctionId }) => {
       
       <div className="relative">
         {/* Table Header */}
-        <div className="tbl-header rounded-t-xl bg-lightPurple/50">
+        <div className="tbl-header rounded-t-xl bg-darkPurple">
           <table className="w-full table-fixed">
             <thead>
               <tr>

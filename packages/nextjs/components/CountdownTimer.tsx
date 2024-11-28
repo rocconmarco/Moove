@@ -18,12 +18,12 @@ interface CountdownTimerProps {
 
 const TimeUnit: React.FC<TimeUnitProps> = ({ value, label }) => (
   <div className="flex flex-col items-center">
-    <div className="bg-gray-800 rounded-lg w-[72px] h-[72px] flex items-center justify-center mb-2">
-      <span className="text-4xl font-bold text-white tabular-nums">
+    <div className="bg-gray-800 rounded-lg w-[60px] h-[60px] md:w-[72px] md:h-[72px] flex items-center justify-center mb-2">
+      <span className="text-3xl md:text-4xl font-bold text-white tabular-nums">
         {value.toString().padStart(2, '0')}
       </span>
     </div>
-    <span className="text-sm text-gray-500 uppercase tracking-wider h-5 flex items-center">{label}</span>
+    <span className="text-[12px] md:text-sm text-gray-500 uppercase tracking-wider h-5 flex items-center">{label}</span>
   </div>
 );
 

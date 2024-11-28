@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import clsx from "clsx";
 import type { NextPage } from "next";
-import { isUndefined } from "util";
 import { formatEther, parseEther } from "viem";
 import { useAccount, useBalance, useReadContract, useWriteContract } from "wagmi";
+import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import BidHistoryTable from "~~/components/BidHistoryTable";
 import CountdownTimer from "~~/components/CountdownTimer";
 import InfoIcon from "~~/components/InfoIcon";
@@ -21,6 +21,7 @@ const Auctions: NextPage = () => {
   const [balance, setBalance] = useState<bigint | null>(null);
   const [actualBid, setActualBid] = useState<string>("");
   const [actualBidMessage, setActualBidMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<boolean>(false);
 
   const nativeCurrencyPrice = useGlobalState(state => state.nativeCurrency.price);
 
@@ -58,7 +59,7 @@ const Auctions: NextPage = () => {
       setBidError(null);
       setActualBidMessage(null);
     } else if (!currentAccount.address) {
-      setBidError("Connect wallet to place bids");
+      setBidError("Connect wallet to place your bid");
     } else if (currentAccount.address === currentWinner) {
       setBidError("You are already the highest bidder");
     } else if (isNaN(parsedBidValue)) {
@@ -179,8 +180,19 @@ const Auctions: NextPage = () => {
     if (isSuccess) {
       setUserBid("");
       setBidError(null);
+      setSuccessMessage(true);
     }
   }, [isSuccess]);
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(false);
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   useEffect(() => {
     setBalance(userBalance ?? null);
@@ -211,47 +223,53 @@ const Auctions: NextPage = () => {
   return (
     <>
       <div className="relative min-h-screen w-full">
-        <div className="relative z-10 flex flex-col items-center justify-center space-x-10 space-y-4 flex-grow pt-8 px-40">
-          <h1 className="text-3xl font-bold mb-6">Current auction</h1>
-          <div className="h-[350px] w-[800px] flex space-x-10">
+        <div className="relative z-10 flex flex-col items-center justify-center space-y-4 flex-grow pt-8 px-40">
+          <h1 className="text-3xl font-bold mb-6 w-[100vw] text-center">Current auction</h1>
+          <div className="h-[650px] w-[95vw] md:h-[350px] md:w-[800px] flex flex-col items-center md:flex-row md:space-x-10">
             <div>
               <NFTImage tokenURI={tokenURI ?? ""} />
             </div>
-            <div className="flex flex-col justify-between h-full">
-              <div className="flex items-start justify-start w-[400px]">
-                <p className="font-bold text-3xl mb-0">
+            <div className="flex flex-col items-center md:items-start justify-between w-[95vw] h-full">
+              <div className="flex items-start justify-center md:justify-start w-[400px]">
+                <p className="font-bold text-2xl md:text-3xl mb-0">
                   <NFTName tokenURI={tokenURI ?? ""} />
                 </p>
               </div>
               <div className="space-y-1">
                 <div className="flex items-center space-x-2">
-                  <p className="text-xl mt-0 mb-0 tracking-wide">Starting price:</p>
-                  <p className="text-2xl mt-0 mb-0 tracking-wide text-lightPurple font-bold">{startingPrice} ETH</p>
-                  <p className="text-sm mt-0 mb-0 tracking-wide italic">${startingPriceInUsd}</p>
-                  <InfoIcon text="The starting price of the auction. If there are no bids at the end of the auction, this will be the selling price for the NFT." />
+                  <p className="text-lg md:text-xl mt-0 mb-0 tracking-wide">Starting price:</p>
+                  <p className="text-xl md:text-2xl mt-0 mb-0 tracking-wide text-lightPurple font-bold">
+                    {startingPrice} ETH
+                  </p>
+                  <p className="hidden md:block text-sm mt-0 mb-0 tracking-wide italic">${startingPriceInUsd}</p>
+                  <div className="hidden md:block">
+                    <InfoIcon text="The starting price of the auction. If there are no bids at the end of the auction, this will be the selling price for the NFT." />
+                  </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <p className="text-xl mt-0 mb-0 tracking-wide">Min. bid increment:</p>
-                  <p className="text-2xl mt-0 mb-0 tracking-wide text-lightPurple font-bold">
+                  <p className="text-lg md:text-xl mt-0 mb-0 tracking-wide">Min. bid increment:</p>
+                  <p className="text-xl md:text-2xl mt-0 mb-0 tracking-wide text-lightPurple font-bold">
                     {minimumBidIncrement} ETH
                   </p>
-                  <p className="text-sm mt-0 mb-0 tracking-wide italic">${minimumBidIncrementInUsd}</p>
-                  <div className="">
+                  <p className="hidden md:block text-sm mt-0 mb-0 tracking-wide italic">${minimumBidIncrementInUsd}</p>
+                  <div className="hidden md:block">
                     <InfoIcon text="The minimum difference between your bid and the current highest bid." />
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <p className="text-xl mt-0 mb-0 tracking-wide">Current highest bid:</p>
-                  <p className="text-2xl mt-0 mb-0 tracking-wide text-lightPurple font-bold">{currentHighestBid} ETH</p>
-                  <p className="text-sm mt-0 mb-0 tracking-wide italic">${currentHighestBidInUsd}</p>
+                  <p className="text-lg md:text-xl mt-0 mb-0 tracking-wide">Current highest bid:</p>
+                  <p className="text-xl md:text-2xl mt-0 mb-0 tracking-wide text-lightPurple font-bold">
+                    {currentHighestBid} ETH
+                  </p>
+                  <p className="hidden md:block text-sm mt-0 mb-0 tracking-wide italic">${currentHighestBidInUsd}</p>
                 </div>
               </div>
 
-              <div className="flex flex-col items-start justify-center space-y-2 w-[400px]">
+              <div className="flex flex-col items-center md:items-start justify-center space-y-2 w-[95vw] md:w-[400px]">
                 <div className="flex flex-col space-y-0">
                   <div
                     className={`flex items-center space-x-4 relative ${
-                      bidError || (actualBidMessage && userBid && !bidError) ? `mb-0` : `mb-3`
+                      bidError || (actualBidMessage && userBid && !bidError) || isSuccess ? `mb-0` : `mb-3`
                     }`}
                   >
                     <input
@@ -260,11 +278,11 @@ const Auctions: NextPage = () => {
                       value={userBid}
                       onChange={handleBidChange}
                       onKeyDown={handleKeyPress}
-                      className="peer border border-darkPurple block text-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none h-[50px] w-full rounded bg-transparent px-3 py-[0.32rem] leading-[1.6] focus:outline-none"
+                      className="peer border border-darkPurple block text-base md:text-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none h-[45px] md:h-[50px] w-full rounded bg-transparent px-3 py-[0.32rem] leading-[1.6] focus:outline-none"
                       placeholder={minimumBidAmount}
                     />
-                    <p className="text-2xl text-lightPurple font-bold">ETH</p>
-                    <p className="text-sm mt-0 mb-0 tracking-wide italic">
+                    <p className="text-xl md:text-2xl text-lightPurple font-bold">ETH</p>
+                    <p className="hidden md:block text-sm mt-0 mb-0 tracking-wide italic">
                       {userBid && `$${(Number(userBid) * nativeCurrencyPrice).toFixed(2)}`}
                     </p>
                   </div>
@@ -283,6 +301,15 @@ const Auctions: NextPage = () => {
                           balance ?? BigInt(0),
                         )} ETH. You will only need to add the difference to place the intended bid. `}
                       />
+                    </div>
+                  )}
+
+                  {isSuccess && successMessage && (
+                    <div className="flex items-center space-x-2">
+                      <div className="flex">
+                        <p className="text-green-500 text-sm my-0 mr-1">Bid placed correctly</p>
+                        <CheckCircleIcon className="my-0" color="#22c55e" width={20} height={20} />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -335,7 +362,7 @@ const Auctions: NextPage = () => {
             <CountdownTimer targetDate={new Date(Number((auction?.[3] ?? BigInt(0)) * BigInt(1000))).toISOString()} />
           </div>
         </div>
-        <div className="relative z-10 flex flex-col items-center justify-center space-x-10 space-y-4 flex-grow pt-8 px-40">
+        <div className="hidden relative z-10 md:flex md:flex-col items-center justify-center space-x-10 space-y-4 flex-grow pt-8 px-40">
           <div className="w-[800px]">
             <BidHistoryTable auctionId={auctionId ?? BigInt(0)} />
           </div>

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import clsx from "clsx";
 import type { NextPage } from "next";
 import { formatEther, parseEther } from "viem";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
+import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import { auctionAlphaContract } from "~~/contracts/contractsInfo";
 import { useGlobalState } from "~~/services/store/store";
 import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
@@ -12,6 +13,7 @@ import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
 const Withdraw: NextPage = () => {
   const [withdrawAmount, setWithdrawAmount] = useState<string>("");
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<boolean>(false);
 
   const nativeCurrencyPrice = useGlobalState(state => state.nativeCurrency.price);
 
@@ -25,11 +27,11 @@ const Withdraw: NextPage = () => {
 
   const handleWithdraw = () => {
     writeContract({
-        ...auctionAlphaContract,
-        functionName: "withdrawBid",
-        args: [parseEther(withdrawAmount)],
-    })
-  }
+      ...auctionAlphaContract,
+      functionName: "withdrawBid",
+      args: [parseEther(withdrawAmount)],
+    });
+  };
 
   const handleWithdrawAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let withdrawAmount = e.target.value;
@@ -53,7 +55,7 @@ const Withdraw: NextPage = () => {
     if (withdrawAmount === "") {
       setWithdrawError(null);
     } else if (!currentAccount.address) {
-        setWithdrawError("Connect wallet to withdraw funds");
+      setWithdrawError("Connect wallet to withdraw funds");
     } else if (isNaN(parsedWithdrawAmount)) {
       setWithdrawError("Please enter a valid number");
     } else if (parsedWithdrawAmount === 0) {
@@ -111,22 +113,30 @@ const Withdraw: NextPage = () => {
     if (isSuccess) {
       setWithdrawAmount("");
       setWithdrawError(null);
+      setSuccessMessage(true);
     }
-
-    
   }, [isSuccess]);
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   return (
     <>
       <div className="relative min-h-screen w-full">
         <div className="relative z-10 flex flex-col items-center justify-center space-x-10 space-y-4 flex-grow pt-8 px-40">
-          <div className="flex flex-col items-center justify-center">
+          <div className="flex flex-col items-center justify-center w-[100vw]">
             <div className="flex flex-col items-center justify-center space-y-0">
               <h1 className="text-3xl font-bold">Withdraw funds</h1>
             </div>
             <div className="flex flex-col items-center justify-center space-y-0">
-              <p className="text-2xl font-bold text-pink mt-10">MOOVE Balance:</p>
-              <span className="block text-5xl sm:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-slate-200 to-gray-600 drop-shadow-[0_10px_8px_rgba(0,0,0,0.8)] pb-2">
+              <p className="text-xl md:text-2xl font-bold text-pink mt-10">MOOVE Balance:</p>
+              <span className="block text-6xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white via-slate-200 to-gray-600 drop-shadow-[0_10px_8px_rgba(0,0,0,0.8)] pb-2">
                 {formatEther(userBalance ?? 0n)} ETH
               </span>
             </div>
@@ -137,19 +147,28 @@ const Withdraw: NextPage = () => {
                 value={withdrawAmount}
                 onChange={handleWithdrawAmountChange}
                 onKeyDown={handleKeyPress}
-                className="peer border border-darkPurple block text-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none h-[50px] w-full rounded bg-transparent px-3 py-[0.32rem] leading-[1.6] focus:outline-none"
+                className="peer border border-darkPurple block text-base md:text-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none h-[45px] md:h-[50px] w-full rounded bg-transparent px-3 py-[0.32rem] leading-[1.6] focus:outline-none"
               />
               <button
                 onClick={handleMaxAmount}
-                className={clsx("py-1.5 px-2.5 rounded-2xl ml-2 transition-all", userBalance !== BigInt(0) ? "hover:bg-secondary" : "hidden")}
-                disabled={
-                    userBalance === BigInt(0)
-                }
+                className={clsx(
+                  "py-1.5 px-2.5 rounded-2xl ml-2 transition-all",
+                  userBalance !== BigInt(0) ? "hover:bg-secondary" : "hidden",
+                )}
+                disabled={userBalance === BigInt(0)}
               >
                 MAX
               </button>
             </div>
             {withdrawError && <p className="text-red-500 text-sm my-1">{withdrawError}</p>}
+            {isSuccess && successMessage && (
+              <div className="flex items-center space-x-2">
+                <div className="flex my-1">
+                  <p className="text-green-500 text-sm my-0 mr-1">Withdrawal successful</p>
+                  <CheckCircleIcon className="my-0" color="#22c55e" width={20} height={20} />
+                </div>
+              </div>
+            )}
             <div className="relative inline-flex group mt-6">
               <div
                 className={clsx(

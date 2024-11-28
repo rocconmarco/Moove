@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { MooveBalance } from "../MooveBalance";
 import { NetworkOptions } from "./NetworkOptions";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { getAddress } from "viem";
@@ -8,16 +9,16 @@ import {
   ArrowLeftOnRectangleIcon,
   ArrowTopRightOnSquareIcon,
   ArrowsRightLeftIcon,
+  BanknotesIcon,
   CheckCircleIcon,
   ChevronDownIcon,
   DocumentDuplicateIcon,
   LinkIcon,
-  BanknotesIcon
 } from "@heroicons/react/24/outline";
-import { BlockieAvatar, isENS } from "~~/components/scaffold-eth";
+import { Balance, BlockieAvatar, isENS } from "~~/components/scaffold-eth";
 import { useOutsideClick } from "~~/hooks/scaffold-eth";
-import { getTargetNetworks } from "~~/utils/scaffold-eth";
 import { useNetworkColor } from "~~/hooks/scaffold-eth";
+import { getTargetNetworks } from "~~/utils/scaffold-eth";
 
 const allowedNetworks = getTargetNetworks();
 
@@ -34,7 +35,7 @@ export const AddressInfoDropdown = ({
   ensAvatar,
   displayName,
   blockExplorerAddressLink,
-  chain
+  chain,
 }: AddressInfoDropdownProps) => {
   const { disconnect } = useDisconnect();
   const checkSumAddress = getAddress(address);
@@ -66,12 +67,26 @@ export const AddressInfoDropdown = ({
           className="dropdown-content menu z-[2] p-2 mt-2 shadow-center shadow-accent bg-base-200 rounded-box gap-1"
         >
           <NetworkOptions hidden={!selectingNetwork} />
-          <li className={selectingNetwork ? "hidden" : ""}>
-            <button className="menu-item btn-sm !rounded-xl flex gap-3 py-3" type="button">
-              <LinkIcon className="h-6 w-4 ml-2 sm:ml-0" />
-              <p>Connected on <span style={{color: networkColor}}>{chain}</span></p>
-            </button>
-          </li>
+          <div className={selectingNetwork ? "hidden" : "flex justify-center"}>
+            <p className="my-2">
+              Connected on <span style={{ color: networkColor }}>{chain}</span>
+            </p>
+          </div>
+
+          <div className="flex items-center justify-center pb-2">
+            <div className="flex md:hidden flex-col w-24 items-center">
+              <span className="text-xs text-pink">Moove balance</span>
+              <MooveBalance address={address} className="min-h-0 h-auto" />
+            </div>
+            <div className="flex md:hidden flex-col w-24 items-center">
+              <span className="text-xs text-pink">Wallet balance</span>
+              <Balance address={address} className="min-h-0 h-auto" />
+            </div>
+          </div>
+
+          <div className="flex justify-center">
+            <hr className="w-44 border border-slate-400" />
+          </div>
           <li className={selectingNetwork ? "hidden" : ""}>
             {addressCopied ? (
               <div className="btn-sm !rounded-xl flex gap-3 py-3">
@@ -117,11 +132,7 @@ export const AddressInfoDropdown = ({
           <li className={selectingNetwork ? "hidden" : ""}>
             <button className="menu-item btn-sm !rounded-xl flex gap-3 py-3" type="button">
               <BanknotesIcon className="h-6 w-4 ml-2 sm:ml-0" />
-              <a
-                href={"/withdraw"}
-                rel="noopener noreferrer"
-                className="whitespace-nowrap"
-              >
+              <a href={"/withdraw"} rel="noopener noreferrer" className="whitespace-nowrap">
                 Withdraw funds
               </a>
             </button>
