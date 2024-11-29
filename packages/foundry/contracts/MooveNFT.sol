@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IMintableNFT } from "./IMintableNFT.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
@@ -36,6 +37,23 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
    */ 
   mapping (address => bool) private s_authorizedMinters;
 
+  /**
+   * This mapping is useful for fetching all the NFTs owned by a particular user
+   * Once an NFT is minted, its tokenId will be added to the array associated with
+   * the user's address.
+   * @dev This mapping is updated everytime a new NFT is minted, and also when
+   * the transfer function is called
+   */
+  mapping (address => uint256[]) private s_ownedNFTsByUser;
+
+  /**
+   * This mapping keeps track of the array index of a particular NFT when owned by a user
+   * @dev It is useful for avoiding nested for loops when trasferring token and 
+   * @dev updating the uint256 array stored within the s_ownedNFTsByUser mapping
+   */
+  mapping (address => mapping(uint256 => uint256)) private s_arrayIndexByTokenId;
+
+
 
   /**
    * @param baseURI the base URI for Moove NFTs' metadata stored in IPFS, the format of the string should be ipfs://<CID>
@@ -65,6 +83,8 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
     if(s_authorizedMinters[msg.sender]) {
       _mint(to, tokenId);
       s_tokenCounter++;
+      s_ownedNFTsByUser[to].push(tokenId);
+      s_arrayIndexByTokenId[to][tokenId] = s_ownedNFTsByUser[to].length;
       emit NFTMinted(to, tokenId);
     } else {
       revert MooveNFT__MintingNotAuthorized();
@@ -90,10 +110,33 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
     if(s_authorizedMinters[msg.sender]) {
       _safeMint(to, tokenId);
       s_tokenCounter++;
+      s_ownedNFTsByUser[to].push(tokenId);
+      s_arrayIndexByTokenId[to][tokenId] = s_ownedNFTsByUser[to].length;
       emit NFTMinted(to, tokenId);
     } else {
       revert MooveNFT__MintingNotAuthorized();
     }
+  }
+
+  /**
+   * The following three functions are the implementation of the IERC721 interface functions
+   * for transferring NFTs. The functions follow the ERC721 standard and implement
+   * an additional internal function to update the mappings and arrays used to fetch information
+   * about the ownership of NFTs from the front end
+   */
+  function transferFrom(address from, address to, uint256 tokenId) public override(ERC721, IERC721) {
+      super.transferFrom(from, to, tokenId);
+      _updateNFTOwnership(from, to, tokenId);
+  }
+
+  function safeTransferFrom(address from, address to, uint256 tokenId) public override(ERC721, IERC721) {
+      super.safeTransferFrom(from, to, tokenId);
+      _updateNFTOwnership(from, to, tokenId);
+  }
+
+  function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public override(ERC721, IERC721) {
+      super.safeTransferFrom(from, to, tokenId, data);
+      _updateNFTOwnership(from, to, tokenId);
   }
 
 
@@ -130,5 +173,22 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
 
   function checkIfAuthorizedMinter(address minter) public view returns(bool) {
     return s_authorizedMinters[minter];
+  }
+
+  function _updateNFTOwnership(address from, address to, uint256 tokenId) internal {
+    uint256 indexToRemove = _getIndexToRemove(from, tokenId);
+    if (indexToRemove == s_ownedNFTsByUser[from].length - 1) {
+      s_ownedNFTsByUser[from].pop();
+    } else {
+      uint256 lastTokenId = s_ownedNFTsByUser[from][s_ownedNFTsByUser[from].length - 1];
+      s_ownedNFTsByUser[from][indexToRemove] = lastTokenId;
+      s_arrayIndexByTokenId[from][lastTokenId] = indexToRemove;
+      s_ownedNFTsByUser[from].pop();
+    }
+    s_ownedNFTsByUser[to].push(tokenId);
+  }
+
+  function _getIndexToRemove(address from, uint256 tokenId) internal view returns(uint256) {
+    return s_arrayIndexByTokenId[from][tokenId];
   }
 }

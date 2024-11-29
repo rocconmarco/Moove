@@ -16,8 +16,6 @@ contract AuctionAlphaTest is Test {
 
     address public constant USER1 = address(1);
     address public constant USER2 = address(2);
-    uint256 public constant STARTING_PRICE = 1000000000000000000;
-    uint256 public constant MINIMUM_BID_INCREMENT = 500000000000000000;
 
     function setUp() public {
         mooveNFT = new MooveNFT("ipfs://bafybeiaepnzx772p5dc2vxbdm6xllkevw6uxu27ncx54cvw2kuloovazcm");
@@ -51,7 +49,7 @@ contract AuctionAlphaTest is Test {
 
     function testStartAuction() public {
         // Setting the starting price at 1ETH, and the minimum bid increment at 0.5ETH
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
 
         uint256 currentAuctionId = auctionAlpha.s_currentAuctionId();
         assertEq(currentAuctionId, 1);
@@ -64,26 +62,24 @@ contract AuctionAlphaTest is Test {
         assertEq(auction.nftId, 1);
         assertEq(auction.openingTimestamp, expectedOpeningTimestamp);
         assertEq(auction.closingTimestamp, expectedClosingTimestamp);
-        assertEq(auction.startingPrice, STARTING_PRICE);
-        assertEq(auction.minimumBidIncrement, MINIMUM_BID_INCREMENT);
         assertEq(auction.isOpen, true);
         assertEq(auction.winner, address(0));
     }
 
     function testShouldNotLetStartingNewAuctionWhenAlreadyOpened() public {
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
 
         vm.expectRevert(AuctionAlpha.AuctionAlpha__AuctionAlreadyOpened.selector);
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
     }
 
     function testFailWhenNonOwnerStartsAuction() public {
         vm.prank(USER1);
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
     }
 
     function testPlaceBid() public {
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
 
         uint256 initialBalance = 10000000000000000000;
         uint256 user1Bid = 2000000000000000000;
@@ -103,7 +99,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testMultipleBidsFromTheSameUser() public {
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
 
         uint256 initialBalance = 10000000000000000000;
         uint256 user1Bid = 2000000000000000000;
@@ -119,7 +115,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testMultipleBidsFromDifferentUsers() public {
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
 
         uint256 initialBalance = 10000000000000000000;
         uint256 user1Bid = 2000000000000000000;
@@ -146,7 +142,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testWithdrawableAmountCorrectlySetAfterBeingOutbidded() public {
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
 
         uint256 initialBalance = 10000000000000000000;
         uint256 user1Bid = 2000000000000000000;
@@ -164,7 +160,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testWithdrawBid() public {
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
 
         uint256 initialBalance = 10000000000000000000;
         uint256 user1Bid = 2000000000000000000;
@@ -191,7 +187,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testShouldNotAllowToWithdrawAmountHigherThanWithdrawableAmount() public {
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
 
         uint256 initialBalance = 10000000000000000000;
         uint256 user1Bid = 2000000000000000000;
@@ -213,7 +209,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testSecondBidFromTheSameUser() public {
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
 
         uint256 initialBalance = 10000000000000000000;
         uint256 user1FirstBid = 2000000000000000000;
@@ -236,14 +232,14 @@ contract AuctionAlphaTest is Test {
     }
 
     function testShouldNotAllowToCloseAuctionBeforeTime() public {
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
 
         vm.expectRevert(AuctionAlpha.AuctionAlpha__AuctionStillOngoing.selector);
         auctionAlpha.closeAuction();
     }
 
     function testCloseAuction() public {
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
         // This line is necessary to allow the AuctionAlpha contract to mint the NFT to the auction's winner
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
 
@@ -266,7 +262,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testCloseAuctionWithoutWinner() public {
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
 
         uint256 currentAuctionId = auctionAlpha.s_currentAuctionId();
         AuctionAlpha.Auction memory auctionBeforeClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
@@ -287,7 +283,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testBuyUnsoldNFT() public {
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
 
         uint256 currentAuctionId = auctionAlpha.s_currentAuctionId();
@@ -299,13 +295,13 @@ contract AuctionAlphaTest is Test {
         uint256 initialBalance = 10000000000000000000;
 
         hoax(USER1, initialBalance);
-        auctionAlpha.buyUnsoldNFT{value: STARTING_PRICE}(1);
+        auctionAlpha.buyUnsoldNFT{value: auctionAlpha.s_startingPrice()}(1);
 
         assertEq(mooveNFT.balanceOf(address(USER1)), 1);
     }
 
     function testShouldNotAllowToPurchaseUnsoldNFTWhenSendingIncorrectAmount() public {
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
 
         uint256 currentAuctionId = auctionAlpha.s_currentAuctionId();
@@ -318,11 +314,11 @@ contract AuctionAlphaTest is Test {
 
         hoax(USER1, initialBalance);
         vm.expectRevert(AuctionAlpha.AuctionAlpha__IncorrectPayment.selector);
-        auctionAlpha.buyUnsoldNFT{value: STARTING_PRICE + 1}(1);
+        auctionAlpha.buyUnsoldNFT{value: auctionAlpha.s_startingPrice() + 1}(1);
     }
 
     function testShouldNotAllowToPurchaseNonListedUnsoldNFT() public {
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
 
         uint256 currentAuctionId = auctionAlpha.s_currentAuctionId();
@@ -335,11 +331,11 @@ contract AuctionAlphaTest is Test {
 
         hoax(USER1, initialBalance);
         vm.expectRevert(AuctionAlpha.AuctionAlpha__TokenNotAvailable.selector);
-        auctionAlpha.buyUnsoldNFT{value: STARTING_PRICE}(2);
+        auctionAlpha.buyUnsoldNFT{value: auctionAlpha.s_startingPrice()}(2);
     }
 
     function testShouldCorrectlyRemoveSoldNFT() public {
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
 
         uint256 currentAuctionId = auctionAlpha.s_currentAuctionId();
@@ -351,7 +347,7 @@ contract AuctionAlphaTest is Test {
         uint256 initialBalance = 10000000000000000000;
 
         hoax(USER1, initialBalance);
-        auctionAlpha.buyUnsoldNFT{value: STARTING_PRICE}(1);
+        auctionAlpha.buyUnsoldNFT{value: auctionAlpha.s_startingPrice()}(1);
 
         AuctionAlpha.Auction memory auctionAfterClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
         bool unsoldNFTIsListed = auctionAlpha.getIsTokenListed(auctionAfterClosing.nftId);
@@ -361,7 +357,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testMultipleUnsoldNFTs() public {
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
 
         uint256 firstAuctionId = auctionAlpha.s_currentAuctionId();
@@ -370,7 +366,7 @@ contract AuctionAlphaTest is Test {
         vm.warp(firstAuction.openingTimestamp + 30 days);
         auctionAlpha.closeAuction();
 
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
 
         uint256 secondAuctionId = auctionAlpha.s_currentAuctionId();
         AuctionAlpha.Auction memory secondAuction = auctionAlpha.getAuctionById(secondAuctionId - 1);
@@ -382,7 +378,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testBuyingMultipleUnsoldNFTs() public {
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
 
         uint256 firstAuctionId = auctionAlpha.s_currentAuctionId();
@@ -391,7 +387,7 @@ contract AuctionAlphaTest is Test {
         vm.warp(firstAuction.openingTimestamp + 30 days);
         auctionAlpha.closeAuction();
 
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
 
         uint256 secondAuctionId = auctionAlpha.s_currentAuctionId();
         AuctionAlpha.Auction memory secondAuction = auctionAlpha.getAuctionById(secondAuctionId - 1);
@@ -402,17 +398,17 @@ contract AuctionAlphaTest is Test {
         uint256 initialBalance = 10000000000000000000;
 
         hoax(USER1, initialBalance);
-        auctionAlpha.buyUnsoldNFT{value: STARTING_PRICE}(1);
+        auctionAlpha.buyUnsoldNFT{value: auctionAlpha.s_startingPrice()}(1);
 
         vm.prank(USER1);
-        auctionAlpha.buyUnsoldNFT{value: STARTING_PRICE}(2);
+        auctionAlpha.buyUnsoldNFT{value: auctionAlpha.s_startingPrice()}(2);
 
         assertEq(mooveNFT.balanceOf(address(USER1)), 2);
         assertEq(auctionAlpha.getUnsoldNFTsArrayLength(), 0);
     }
 
     function testBuyingAlreadySoldUnsoldNFTs() public {
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
 
         uint256 firstAuctionId = auctionAlpha.s_currentAuctionId();
@@ -421,7 +417,7 @@ contract AuctionAlphaTest is Test {
         vm.warp(firstAuction.openingTimestamp + 30 days);
         auctionAlpha.closeAuction();
 
-        auctionAlpha.startAuction(STARTING_PRICE, MINIMUM_BID_INCREMENT);
+        auctionAlpha.startAuction();
 
         uint256 secondAuctionId = auctionAlpha.s_currentAuctionId();
         AuctionAlpha.Auction memory secondAuction = auctionAlpha.getAuctionById(secondAuctionId - 1);
@@ -432,10 +428,10 @@ contract AuctionAlphaTest is Test {
         uint256 initialBalance = 10000000000000000000;
 
         hoax(USER1, initialBalance);
-        auctionAlpha.buyUnsoldNFT{value: STARTING_PRICE}(1);
+        auctionAlpha.buyUnsoldNFT{value: auctionAlpha.s_startingPrice()}(1);
 
         vm.prank(USER1);
         vm.expectRevert(AuctionAlpha.AuctionAlpha__TokenNotAvailable.selector);
-        auctionAlpha.buyUnsoldNFT{value: STARTING_PRICE}(1);
+        auctionAlpha.buyUnsoldNFT{value: auctionAlpha.s_startingPrice()}(1);
     }
 }

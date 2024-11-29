@@ -5,10 +5,8 @@ import "forge-std/console.sol";
 import { IAuctionAlpha } from "./IAuctionAlpha.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IMintableNFT } from "./IMintableNFT.sol";
-import { ReentrancyGuard } from
-  "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import { AutomationCompatibleInterface } from
-  "@chainlink/contracts/src/v0.8/automation/AutomationCompatible.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { AutomationCompatibleInterface } from "@chainlink/contracts/v0.8/automation/AutomationCompatible.sol";
 
 /**
  * A smart contract that manages the auction process for Moove NFTs
@@ -16,12 +14,7 @@ import { AutomationCompatibleInterface } from
  * @dev the contract follows the code structure suggested by Cyfrin Updraft
  * @dev functions follow the CEI pattern to avoid potential security risks
  */
-contract AuctionAlpha is
-  IAuctionAlpha,
-  Ownable,
-  ReentrancyGuard,
-  AutomationCompatibleInterface
-{
+contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationCompatibleInterface {
   error AuctionAlpha__AuctionStillOngoing();
   error AuctionAlpha__AuctionAlreadyOpened();
   error AuctionAlpha__BidAmountMustBeHigherThanCurrentHighestBid();
@@ -39,6 +32,10 @@ contract AuctionAlpha is
   error AuctionAlpha__AllNFTsListed();
   error AuctionAlpha__DirectPaymentNotAllowed();
   error AuctionAlpha__SenderMustBeForwarderAddress();
+  error AuctionAlpha__StartingPriceMustBeGreaterThanZero();
+  error AuctionAlpha__MinimumBidIncrementMustBeGreaterThanZero();
+  error AuctionAlpha__ForwarderAddressMustNotBeAddressZero();
+
 
   struct Auction {
     uint256 auctionId;
@@ -126,8 +123,7 @@ contract AuctionAlpha is
    * Helper mapping to track the array index of the unsold NFTs
    * to easily remove items from the array when an unsold NFT has been sold
    */
-  mapping(uint256 tokenId => uint256 arrayIndex) private
-    s_tokenIdToArrayIndexUnsoldNFTs;
+  mapping(uint256 tokenId => uint256 arrayIndex) private s_tokenIdToArrayIndexUnsoldNFTs;
 
   /**
    * Record of all the auctions
@@ -163,6 +159,10 @@ contract AuctionAlpha is
     s_currentNftId = 0;
     s_currentHighestBid = 0;
     s_currentWinner = address(0);
+
+    // Default values in order to be sure that no auction is initialized with zero values
+    s_startingPrice = 10000000000000000;
+    s_minimumBidIncrement = 5000000000000000;
   }
 
   /**
@@ -178,15 +178,29 @@ contract AuctionAlpha is
     revert AuctionAlpha__DirectPaymentNotAllowed();
   }
 
-  function checkUpkeep(bytes calldata) external override returns (bool, bytes memory) {
+  /**
+   * Checks the conditions for the Forwarder contract to call the performUpkeep function
+   * If there are no auctions opened, it returns true, whereas if there is already an auction ongoing
+   * it checks whether the current timestamp is greater or equal than the calculated closing timestamp
+   * stored onchain. In the latter case it will return true and the automation is allowed
+   */
+  function checkUpkeep(bytes calldata) external view override returns (bool, bytes memory) {
     if (s_currentAuctionId == 0) {
       return (true, bytes(""));
     } else {
-      bool needsUpkeep = (block.timestamp >= s_auctions[s_currentAuctionId - 1].closingTimestamp);
-      return (needsUpkeep, bytes(""));
+      bool upkeepNeeded = (block.timestamp >= s_auctions[s_currentAuctionId - 1].closingTimestamp);
+      return (upkeepNeeded, bytes(""));
     }
   }
 
+  /**
+   * The function to be called by the Forwarder contract authorized by the owner of AuctionAlpha.
+   * As the best practices suggest, we run the same checks as in the checkUpkeep function
+   * for safety reasons. In case there are no auctions opened, it will only start a new auction.
+   * In case there is already an ongoing auction, it will check if the current block timestamp
+   * is lower than the calculated closing timestamp stored onchain, and if it's not the case
+   * it will close the current auction and simultaneosly open a new one
+   */
   function performUpkeep(bytes calldata) external override onlyForwarder {
     if (s_currentAuctionId == 0) {
       startAuction();
@@ -277,9 +291,7 @@ contract AuctionAlpha is
    * and, as a result, as some funds in the withdrawableAmountPerBidder mapping.
    * The user can decide to withdraw all (or part of) the funds or to add other funds and outbid the current winner
    */
-  function withdrawBid(
-    uint256 withdrawAmount
-  ) public nonReentrant {
+  function withdrawBid(uint256 withdrawAmount) public nonReentrant {
     if (withdrawAmount == 0) {
       revert AuctionAlpha__WithdrawAmountMustBeGreaterThanZero();
     }
@@ -397,9 +409,7 @@ contract AuctionAlpha is
    * The value sent by the buyer in the transaction must be EXACTLY equal to the selling price
    * Otherwise the function will revert for incorrect payment
    */
-  function buyUnsoldNFT(
-    uint256 tokenId
-  ) public payable {
+  function buyUnsoldNFT(uint256 tokenId) public payable {
     if (!s_isTokenListed[tokenId]) {
       revert AuctionAlpha__TokenNotAvailable();
     }
@@ -419,8 +429,7 @@ contract AuctionAlpha is
     if (indexToRemove == s_listOfUnsoldNFTs.length - 1) {
       s_listOfUnsoldNFTs.pop();
     } else {
-      UnsoldNFT memory lastUnsoldNFT =
-        s_listOfUnsoldNFTs[s_listOfUnsoldNFTs.length - 1];
+      UnsoldNFT memory lastUnsoldNFT = s_listOfUnsoldNFTs[s_listOfUnsoldNFTs.length - 1];
       s_listOfUnsoldNFTs[indexToRemove] = lastUnsoldNFT;
       s_tokenIdToArrayIndexUnsoldNFTs[lastUnsoldNFT.tokenId] = indexToRemove;
       s_listOfUnsoldNFTs.pop();
@@ -434,27 +443,30 @@ contract AuctionAlpha is
    * the Chainlink Automation Network to perform the upkeep when the custom logic conditions defined
    * inside the checkUpkeep function are met
    */
-  function setForwarderAddress(
-    address forwarderAddress
-  ) public onlyOwner {
+  function setForwarderAddress(address forwarderAddress) public onlyOwner {
+    if (forwarderAddress == address(0)) {
+      revert AuctionAlpha__ForwarderAddressMustNotBeAddressZero();
+    }
     s_forwarderAddress = forwarderAddress;
   }
 
   /**
    * @param startingPrice the intended starting price of the auction decided by the owner
    */
-  function setStartingPrice(
-    uint256 startingPrice
-  ) public onlyOwner {
+  function setStartingPrice(uint256 startingPrice) public onlyOwner {
+    if(startingPrice == 0) {
+      revert AuctionAlpha__StartingPriceMustBeGreaterThanZero();
+    }
     s_startingPrice = startingPrice;
   }
 
   /**
    * @param minimumBidIncrement the minimum increment for every new bid to be considered valid
    */
-  function setMinimumBidIncrement(
-    uint256 minimumBidIncrement
-  ) public onlyOwner {
+  function setMinimumBidIncrement(uint256 minimumBidIncrement) public onlyOwner {
+    if(minimumBidIncrement == 0) {
+      revert AuctionAlpha__MinimumBidIncrementMustBeGreaterThanZero();
+    }
     s_minimumBidIncrement = minimumBidIncrement;
   }
 
@@ -462,45 +474,31 @@ contract AuctionAlpha is
     return !s_auctions[s_currentAuctionId - 1].isOpen;
   }
 
-  function _getArrayIndexOfUnsoldNFT(
-    uint256 tokenId
-  ) internal view returns (uint256) {
+  function _getArrayIndexOfUnsoldNFT(uint256 tokenId) internal view returns (uint256) {
     return s_tokenIdToArrayIndexUnsoldNFTs[tokenId];
   }
 
-  function getAuctionById(
-    uint256 auctionId
-  ) public view returns (Auction memory) {
+  function getAuctionById(uint256 auctionId) public view returns (Auction memory) {
     return s_auctions[auctionId];
   }
 
-  function getListOfBids(
-    uint256 auctionId
-  ) public view returns (Bid[] memory) {
+  function getListOfBids(uint256 auctionId) public view returns (Bid[] memory) {
     return s_bidHistory[auctionId];
   }
 
-  function getWithdrawableAmountByBidderAddress(
-    address bidder
-  ) public view returns (uint256) {
+  function getWithdrawableAmountByBidderAddress(address bidder) public view returns (uint256) {
     return s_withdrawableAmountPerBidder[bidder];
   }
 
-  function getUnsoldNFTPrice(
-    uint256 tokenId
-  ) public view returns (uint256) {
+  function getUnsoldNFTPrice(uint256 tokenId) public view returns (uint256) {
     return s_unsoldNFTsSellingPrice[tokenId];
   }
 
-  function getArrayIndexOfUnsoldNFT(
-    uint256 tokenId
-  ) public view returns (uint256) {
+  function getArrayIndexOfUnsoldNFT(uint256 tokenId) public view returns (uint256) {
     return s_tokenIdToArrayIndexUnsoldNFTs[tokenId];
   }
 
-  function getIsTokenListed(
-    uint256 tokenId
-  ) public view returns (bool) {
+  function getIsTokenListed(uint256 tokenId) public view returns (bool) {
     return s_isTokenListed[tokenId];
   }
 
