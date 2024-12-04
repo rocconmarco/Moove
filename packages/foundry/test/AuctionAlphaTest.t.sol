@@ -479,6 +479,83 @@ contract AuctionAlphaTest is Test {
         auctionAlpha.buyUnsoldNFT{value: tokenPrice}(1);
     }
 
+    function testSetStartingPriceAndSetMinimumBidIncrement() public {
+        uint256 defaultStartingPrice = auctionAlpha.s_startingPrice();
+        uint256 defaultMinimumBidIncrement = auctionAlpha.s_minimumBidIncrement();
+
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+        mooveNFT.addAuthorizedMinter(address(auctionAlpha));
+
+        uint256 firstAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Auction memory firstAuction = auctionAlpha.getAuctionById(firstAuctionId - 1);
+
+        assertEq(firstAuction.startingPrice, defaultStartingPrice);
+        assertEq(firstAuction.minimumBidIncrement, defaultMinimumBidIncrement);
+
+        // The owner decides to double both the starting price and the minimum bid increment
+        uint256 newStartingPrice = 20000000000000000;
+        uint256 newMinimumBidIncrement = 10000000000000000;
+
+        auctionAlpha.setStartingPrice(newStartingPrice);
+        auctionAlpha.setMinimumBidIncrement(newMinimumBidIncrement);
+
+        vm.warp(firstAuction.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
+        auctionAlpha.closeAuction();
+
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+
+        uint256 secondAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Auction memory secondAuction = auctionAlpha.getAuctionById(secondAuctionId - 1);
+
+        assertEq(secondAuction.startingPrice, newStartingPrice);
+        assertEq(secondAuction.minimumBidIncrement, newMinimumBidIncrement);
+    }
+
+    function testFailSetStartingPriceWhenNotOwner() public {
+        uint256 defaultStartingPrice = auctionAlpha.s_startingPrice();
+        uint256 defaultMinimumBidIncrement = auctionAlpha.s_minimumBidIncrement();
+
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+        mooveNFT.addAuthorizedMinter(address(auctionAlpha));
+
+        uint256 firstAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Auction memory firstAuction = auctionAlpha.getAuctionById(firstAuctionId - 1);
+
+        assertEq(firstAuction.startingPrice, defaultStartingPrice);
+        assertEq(firstAuction.minimumBidIncrement, defaultMinimumBidIncrement);
+
+        // The owner decides to double both the starting price and the minimum bid increment
+        uint256 newStartingPrice = 20000000000000000;
+
+        vm.prank(USER1);
+        auctionAlpha.setStartingPrice(newStartingPrice);
+    }
+
+    function testFailSetMinimumBidIncrementWhenNotOwner() public {
+        uint256 defaultStartingPrice = auctionAlpha.s_startingPrice();
+        uint256 defaultMinimumBidIncrement = auctionAlpha.s_minimumBidIncrement();
+
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+        mooveNFT.addAuthorizedMinter(address(auctionAlpha));
+
+        uint256 firstAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Auction memory firstAuction = auctionAlpha.getAuctionById(firstAuctionId - 1);
+
+        assertEq(firstAuction.startingPrice, defaultStartingPrice);
+        assertEq(firstAuction.minimumBidIncrement, defaultMinimumBidIncrement);
+
+        // The owner decides to double both the starting price and the minimum bid increment
+        uint256 newMinimumBidIncrement = 100000000000000000;
+
+        vm.prank(USER1);
+        auctionAlpha.setMinimumBidIncrement(newMinimumBidIncrement);
+    }
+
     /**
      * This test is a combination between testCloseAuction from AuctionAlphaTest and 
      * testUpdateOwnedNFTArrayWhenTransferring from MooveNFTTest. It is aimed at checking

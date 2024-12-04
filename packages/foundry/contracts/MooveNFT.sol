@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import { ERC721Enumerable } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import { IMintableNFT } from "./IMintableNFT.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
@@ -16,7 +15,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
  * @dev The contract communicates with the AuctionAlpha via a custom interface that only implements
  * @dev the required functions, which are mint, safeMint and getMaxSupply
  */
-contract MooveNFT is ERC721Enumerable, IMintableNFT, Ownable {
+contract MooveNFT is ERC721, IMintableNFT, Ownable {
 
   error MooveNFT__MintingNotAuthorized();
   error MooveNFT__MintingNonExistingToken();

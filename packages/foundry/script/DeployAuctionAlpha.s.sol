@@ -9,7 +9,9 @@ import { MooveNFT } from "../contracts/MooveNFT.sol";
 contract DeployAuctionAlpha is Script {
 
   function run(address mooveNFTAddress) external returns(AuctionAlpha) {
+    vm.startBroadcast();
     AuctionAlpha auctionAlpha = new AuctionAlpha(mooveNFTAddress);
+    vm.stopBroadcast();
 
     return auctionAlpha;
   }
