@@ -14,12 +14,15 @@ contract AuctionAlphaTest is Test {
     MooveNFT public mooveNFT;
     IMintableNFT public iMintableNFT;
 
-    address public constant USER1 = address(1);
-    address public constant USER2 = address(2);
+    address public USER1 = makeAddr("user1");
+    address public USER2 = makeAddr("user2");
+    address public forwarderAddress = makeAddr("forwarder");
 
     function setUp() public {
         mooveNFT = new MooveNFT("ipfs://bafybeiaepnzx772p5dc2vxbdm6xllkevw6uxu27ncx54cvw2kuloovazcm");
         auctionAlpha = new AuctionAlpha(address(mooveNFT));
+
+        auctionAlpha.setForwarderAddress(forwarderAddress);
     }
 
     function testVariableInizialization() public view {
@@ -48,7 +51,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testStartAuction() public {
-        // Setting the starting price at 1ETH, and the minimum bid increment at 0.5ETH
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
 
         uint256 currentAuctionId = auctionAlpha.s_currentAuctionId();
@@ -67,18 +70,21 @@ contract AuctionAlphaTest is Test {
     }
 
     function testShouldNotLetStartingNewAuctionWhenAlreadyOpened() public {
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
 
         vm.expectRevert(AuctionAlpha.AuctionAlpha__AuctionAlreadyOpened.selector);
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
     }
 
-    function testFailWhenNonOwnerStartsAuction() public {
+    function testFailWhenNonForwarderStartsAuction() public {
         vm.prank(USER1);
         auctionAlpha.startAuction();
     }
 
     function testPlaceBid() public {
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
 
         uint256 initialBalance = 10000000000000000000;
@@ -99,6 +105,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testMultipleBidsFromTheSameUser() public {
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
 
         uint256 initialBalance = 10000000000000000000;
@@ -115,6 +122,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testMultipleBidsFromDifferentUsers() public {
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
 
         uint256 initialBalance = 10000000000000000000;
@@ -142,6 +150,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testWithdrawableAmountCorrectlySetAfterBeingOutbidded() public {
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
 
         uint256 initialBalance = 10000000000000000000;
@@ -160,6 +169,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testWithdrawBid() public {
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
 
         uint256 initialBalance = 10000000000000000000;
@@ -187,6 +197,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testShouldNotAllowToWithdrawAmountHigherThanWithdrawableAmount() public {
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
 
         uint256 initialBalance = 10000000000000000000;
@@ -209,6 +220,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testSecondBidFromTheSameUser() public {
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
 
         uint256 initialBalance = 10000000000000000000;
@@ -232,13 +244,16 @@ contract AuctionAlphaTest is Test {
     }
 
     function testShouldNotAllowToCloseAuctionBeforeTime() public {
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
 
         vm.expectRevert(AuctionAlpha.AuctionAlpha__AuctionStillOngoing.selector);
+        vm.prank(forwarderAddress);
         auctionAlpha.closeAuction();
     }
 
     function testCloseAuction() public {
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
         // This line is necessary to allow the AuctionAlpha contract to mint the NFT to the auction's winner
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
@@ -253,6 +268,7 @@ contract AuctionAlphaTest is Test {
         AuctionAlpha.Auction memory auctionBeforeClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
 
         vm.warp(auctionBeforeClosing.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
         auctionAlpha.closeAuction();
 
         AuctionAlpha.Auction memory auctionAfterClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
@@ -262,12 +278,14 @@ contract AuctionAlphaTest is Test {
     }
 
     function testCloseAuctionWithoutWinner() public {
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
 
         uint256 currentAuctionId = auctionAlpha.s_currentAuctionId();
         AuctionAlpha.Auction memory auctionBeforeClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
 
         vm.warp(auctionBeforeClosing.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
         auctionAlpha.closeAuction();
 
         AuctionAlpha.Auction memory auctionAfterClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
@@ -283,6 +301,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testBuyUnsoldNFT() public {
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
 
@@ -290,17 +309,20 @@ contract AuctionAlphaTest is Test {
         AuctionAlpha.Auction memory auctionBeforeClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
 
         vm.warp(auctionBeforeClosing.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
         auctionAlpha.closeAuction();
 
         uint256 initialBalance = 10000000000000000000;
+        uint256 tokenPrice = auctionAlpha.s_startingPrice();
 
         hoax(USER1, initialBalance);
-        auctionAlpha.buyUnsoldNFT{value: auctionAlpha.s_startingPrice()}(1);
+        auctionAlpha.buyUnsoldNFT{value: tokenPrice}(1);
 
         assertEq(mooveNFT.balanceOf(address(USER1)), 1);
     }
 
     function testShouldNotAllowToPurchaseUnsoldNFTWhenSendingIncorrectAmount() public {
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
 
@@ -308,16 +330,19 @@ contract AuctionAlphaTest is Test {
         AuctionAlpha.Auction memory auctionBeforeClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
 
         vm.warp(auctionBeforeClosing.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
         auctionAlpha.closeAuction();
 
         uint256 initialBalance = 10000000000000000000;
+        uint256 tokenPrice = auctionAlpha.s_startingPrice();
 
         hoax(USER1, initialBalance);
         vm.expectRevert(AuctionAlpha.AuctionAlpha__IncorrectPayment.selector);
-        auctionAlpha.buyUnsoldNFT{value: auctionAlpha.s_startingPrice() + 1}(1);
+        auctionAlpha.buyUnsoldNFT{value: tokenPrice + 1}(1);
     }
 
     function testShouldNotAllowToPurchaseNonListedUnsoldNFT() public {
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
 
@@ -325,16 +350,19 @@ contract AuctionAlphaTest is Test {
         AuctionAlpha.Auction memory auctionBeforeClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
 
         vm.warp(auctionBeforeClosing.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
         auctionAlpha.closeAuction();
 
         uint256 initialBalance = 10000000000000000000;
+        uint256 tokenPrice = auctionAlpha.s_startingPrice();
 
         hoax(USER1, initialBalance);
         vm.expectRevert(AuctionAlpha.AuctionAlpha__TokenNotAvailable.selector);
-        auctionAlpha.buyUnsoldNFT{value: auctionAlpha.s_startingPrice()}(2);
+        auctionAlpha.buyUnsoldNFT{value: tokenPrice}(2);
     }
 
     function testShouldCorrectlyRemoveSoldNFT() public {
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
 
@@ -342,12 +370,14 @@ contract AuctionAlphaTest is Test {
         AuctionAlpha.Auction memory auctionBeforeClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
 
         vm.warp(auctionBeforeClosing.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
         auctionAlpha.closeAuction();
 
         uint256 initialBalance = 10000000000000000000;
+        uint256 tokenPrice = auctionAlpha.s_startingPrice();
 
         hoax(USER1, initialBalance);
-        auctionAlpha.buyUnsoldNFT{value: auctionAlpha.s_startingPrice()}(1);
+        auctionAlpha.buyUnsoldNFT{value: tokenPrice}(1);
 
         AuctionAlpha.Auction memory auctionAfterClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
         bool unsoldNFTIsListed = auctionAlpha.getIsTokenListed(auctionAfterClosing.nftId);
@@ -357,6 +387,7 @@ contract AuctionAlphaTest is Test {
     }
 
     function testMultipleUnsoldNFTs() public {
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
 
@@ -364,20 +395,24 @@ contract AuctionAlphaTest is Test {
         AuctionAlpha.Auction memory firstAuction = auctionAlpha.getAuctionById(firstAuctionId - 1);
 
         vm.warp(firstAuction.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
         auctionAlpha.closeAuction();
 
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
 
         uint256 secondAuctionId = auctionAlpha.s_currentAuctionId();
         AuctionAlpha.Auction memory secondAuction = auctionAlpha.getAuctionById(secondAuctionId - 1);
 
         vm.warp(secondAuction.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
         auctionAlpha.closeAuction();
 
         assertEq(auctionAlpha.getUnsoldNFTsArrayLength(), 2);
     }
 
     function testBuyingMultipleUnsoldNFTs() public {
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
 
@@ -385,29 +420,34 @@ contract AuctionAlphaTest is Test {
         AuctionAlpha.Auction memory firstAuction = auctionAlpha.getAuctionById(firstAuctionId - 1);
 
         vm.warp(firstAuction.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
         auctionAlpha.closeAuction();
 
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
 
         uint256 secondAuctionId = auctionAlpha.s_currentAuctionId();
         AuctionAlpha.Auction memory secondAuction = auctionAlpha.getAuctionById(secondAuctionId - 1);
 
         vm.warp(secondAuction.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
         auctionAlpha.closeAuction();
 
         uint256 initialBalance = 10000000000000000000;
+        uint256 tokenPrice = auctionAlpha.s_startingPrice();
 
         hoax(USER1, initialBalance);
-        auctionAlpha.buyUnsoldNFT{value: auctionAlpha.s_startingPrice()}(1);
+        auctionAlpha.buyUnsoldNFT{value: tokenPrice}(1);
 
         vm.prank(USER1);
-        auctionAlpha.buyUnsoldNFT{value: auctionAlpha.s_startingPrice()}(2);
+        auctionAlpha.buyUnsoldNFT{value: tokenPrice}(2);
 
         assertEq(mooveNFT.balanceOf(address(USER1)), 2);
         assertEq(auctionAlpha.getUnsoldNFTsArrayLength(), 0);
     }
 
     function testBuyingAlreadySoldUnsoldNFTs() public {
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
 
@@ -415,23 +455,85 @@ contract AuctionAlphaTest is Test {
         AuctionAlpha.Auction memory firstAuction = auctionAlpha.getAuctionById(firstAuctionId - 1);
 
         vm.warp(firstAuction.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
         auctionAlpha.closeAuction();
 
+        vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
 
         uint256 secondAuctionId = auctionAlpha.s_currentAuctionId();
         AuctionAlpha.Auction memory secondAuction = auctionAlpha.getAuctionById(secondAuctionId - 1);
 
         vm.warp(secondAuction.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
         auctionAlpha.closeAuction();
 
         uint256 initialBalance = 10000000000000000000;
+        uint256 tokenPrice = auctionAlpha.s_startingPrice();
 
         hoax(USER1, initialBalance);
-        auctionAlpha.buyUnsoldNFT{value: auctionAlpha.s_startingPrice()}(1);
+        auctionAlpha.buyUnsoldNFT{value: tokenPrice}(1);
+
+        vm.expectRevert(AuctionAlpha.AuctionAlpha__TokenNotAvailable.selector);
+        vm.prank(USER1);
+        auctionAlpha.buyUnsoldNFT{value: tokenPrice}(1);
+    }
+
+    /**
+     * This test is a combination between testCloseAuction from AuctionAlphaTest and 
+     * testUpdateOwnedNFTArrayWhenTransferring from MooveNFTTest. It is aimed at checking
+     * the correct update of s_ownedNFTsByUser, a mapping that keeps track of the NFT ownership
+     * when minting a new NFT and when transferring the token between users
+     */
+    function testMappingUpdateWhenTransferringToken() public {
+        // The first part is the same as testCloseAuction
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+
+        mooveNFT.addAuthorizedMinter(address(auctionAlpha));
+
+        uint256 initialBalance = 10000000000000000000;
+        uint256 user1Bid = 2000000000000000000;
+
+        hoax(USER1, initialBalance);
+        auctionAlpha.placeBid{value: user1Bid}();
+
+        uint256 currentAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Auction memory auctionBeforeClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
+
+        vm.warp(auctionBeforeClosing.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
+        auctionAlpha.closeAuction();
+
+        AuctionAlpha.Auction memory auctionAfterClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
+
+        assertEq(auctionAfterClosing.isOpen, false);
+        assertEq(mooveNFT.balanceOf(address(USER1)), 1);
+        // End of the testCloseAuction part
+
+        // The following part is the same as testUpdateOwnedNFTArrayWhenTransferring
+        uint256[] memory user1OwnedNFTsArrayBeforeTransfer = mooveNFT.getOwnedNFTsArray(USER1);
+        uint256[] memory user2OwnedNFTsArrayBeforeTransfer = mooveNFT.getOwnedNFTsArray(USER2);
+
+        assertEq(user2OwnedNFTsArrayBeforeTransfer.length, 0);
+        assertEq(user1OwnedNFTsArrayBeforeTransfer.length, 1);
+        assertEq(user1OwnedNFTsArrayBeforeTransfer[0], 1);
+
+        assertEq(mooveNFT.balanceOf(USER1), 1);
+        assertEq(mooveNFT.balanceOf(USER2), 0);
 
         vm.prank(USER1);
-        vm.expectRevert(AuctionAlpha.AuctionAlpha__TokenNotAvailable.selector);
-        auctionAlpha.buyUnsoldNFT{value: auctionAlpha.s_startingPrice()}(1);
+        mooveNFT.safeTransferFrom(USER1, USER2, 1);
+        
+        uint256[] memory user1OwnedNFTsArrayAfterTransfer = mooveNFT.getOwnedNFTsArray(USER1);
+        uint256[] memory user2OwnedNFTsArrayAfterTransfer = mooveNFT.getOwnedNFTsArray(USER2);
+
+        assertEq(user1OwnedNFTsArrayAfterTransfer.length, 0);
+        assertEq(user2OwnedNFTsArrayAfterTransfer.length, 1);
+        assertEq(user2OwnedNFTsArrayAfterTransfer[0], 1);
+        // End of the testUpdateOwnedNFTArrayWhenTransferring part
+
+        assertEq(mooveNFT.balanceOf(USER1), 0);
+        assertEq(mooveNFT.balanceOf(USER2), 1);
     }
 }

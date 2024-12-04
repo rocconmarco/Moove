@@ -67,8 +67,7 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
   IMintableNFT public immutable i_nftContract;
 
   /// Mapping that keeps track of the highest bid for every bidder in all the auctions
-  mapping(uint256 auctionId => mapping(address bidder => uint256 highestBid))
-    public s_listOfHighestBidPerUser;
+  mapping(uint256 auctionId => mapping(address bidder => uint256 highestBid)) public s_listOfHighestBidPerUser;
 
   /**
    * Mapping that keeps track of every single bid for every auction held
@@ -81,8 +80,7 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
    * It is the amount of ETH that the user can withdraw from the contract
    * The user can decide to use this amount to place other bids
    */
-  mapping(address bidder => uint256 withdrawableAmount) public
-    s_withdrawableAmountPerBidder;
+  mapping(address bidder => uint256 withdrawableAmount) public s_withdrawableAmountPerBidder;
 
   uint256 public s_currentAuctionId;
   uint256 public s_currentNftId;
@@ -151,9 +149,7 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
    * The owner of the contract is set via the Ownable.sol contract provided by OpenZeppelin
    * All the state variables are set to their default value
    */
-  constructor(
-    address _nftContract
-  ) Ownable(msg.sender) {
+  constructor(address _nftContract) Ownable(msg.sender) {
     i_nftContract = IMintableNFT(_nftContract);
     s_currentAuctionId = 0;
     s_currentNftId = 0;

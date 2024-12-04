@@ -136,4 +136,48 @@ contract MooveNFTTest is Test {
         assertEq(mooveNFT.balanceOf(USER1), 1);
         assertEq(mooveNFT.balanceOf(USER2), 1);
     }
+
+    // The following tests are aimed at evaluating the new functionalites of tracking
+    // the nft owned by a single user and the correct implementation of update functions
+
+    function testUpdateOwnedNFTArrayWhenMinting() public {
+        mooveNFT.addAuthorizedMinter(USER1);
+
+        vm.startPrank(USER1);
+        mooveNFT.safeMint(USER1, 1);
+        mooveNFT.safeMint(USER1, 2);
+        mooveNFT.safeMint(USER1, 3);
+        vm.stopPrank();
+        
+        uint256[] memory ownedNFTsArray = mooveNFT.getOwnedNFTsArray(USER1);
+
+        assertEq(ownedNFTsArray.length, 3);
+        assertEq(ownedNFTsArray[0], 1);
+        assertEq(ownedNFTsArray[1], 2);
+        assertEq(ownedNFTsArray[2], 3);
+    }
+
+    function testUpdateOwnedNFTArrayWhenTransferring() public {
+        mooveNFT.addAuthorizedMinter(USER1);
+
+        vm.prank(USER1);
+        mooveNFT.safeMint(USER1, 1);
+
+        uint256[] memory user1OwnedNFTsArrayBeforeTransfer = mooveNFT.getOwnedNFTsArray(USER1);
+        uint256[] memory user2OwnedNFTsArrayBeforeTransfer = mooveNFT.getOwnedNFTsArray(USER2);
+
+        assertEq(user2OwnedNFTsArrayBeforeTransfer.length, 0);
+        assertEq(user1OwnedNFTsArrayBeforeTransfer.length, 1);
+        assertEq(user1OwnedNFTsArrayBeforeTransfer[0], 1);
+
+        vm.prank(USER1);
+        mooveNFT.safeTransferFrom(USER1, USER2, 1);
+        
+        uint256[] memory user1OwnedNFTsArrayAfterTransfer = mooveNFT.getOwnedNFTsArray(USER1);
+        uint256[] memory user2OwnedNFTsArrayAfterTransfer = mooveNFT.getOwnedNFTsArray(USER2);
+
+        assertEq(user1OwnedNFTsArrayAfterTransfer.length, 0);
+        assertEq(user2OwnedNFTsArrayAfterTransfer.length, 1);
+        assertEq(user2OwnedNFTsArrayAfterTransfer[0], 1);
+    }
 }

@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { ERC721Enumerable } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import { IMintableNFT } from "./IMintableNFT.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
@@ -15,7 +16,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
  * @dev The contract communicates with the AuctionAlpha via a custom interface that only implements
  * @dev the required functions, which are mint, safeMint and getMaxSupply
  */
-contract MooveNFT is ERC721, IMintableNFT, Ownable {
+contract MooveNFT is ERC721Enumerable, IMintableNFT, Ownable {
 
   error MooveNFT__MintingNotAuthorized();
   error MooveNFT__MintingNonExistingToken();
@@ -98,7 +99,7 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
    * @dev It checks whether the sender is an authorized address
    * @dev If minted successfully, the token counter will increment
    * @dev The AuctionAlpha contract utilizes safeMint to mint the NFT to the winner of the auction
-   * @dev We prefer to use safeMint to check the receiver's capacility to accept NFTs
+   * @dev We prefer to use safeMint to check the receiver's capability to accept NFTs
    */
   function safeMint(address to, uint256 tokenId) external {
     if(to == address(0)) {
@@ -111,7 +112,7 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
       _safeMint(to, tokenId);
       s_tokenCounter++;
       s_ownedNFTsByUser[to].push(tokenId);
-      s_arrayIndexByTokenId[to][tokenId] = s_ownedNFTsByUser[to].length;
+      s_arrayIndexByTokenId[to][tokenId] = s_ownedNFTsByUser[to].length - 1;
       emit NFTMinted(to, tokenId);
     } else {
       revert MooveNFT__MintingNotAuthorized();
@@ -119,26 +120,13 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
   }
 
   /**
-   * The following three functions are the implementation of the IERC721 interface functions
-   * for transferring NFTs. The functions follow the ERC721 standard and implement
-   * an additional internal function to update the mappings and arrays used to fetch information
-   * about the ownership of NFTs from the front end
+   * Overriding the transferFrom function from ERC721 standard, in order to update
+   * the mapping that keeps track of all the NFTs owned by a particular user
    */
   function transferFrom(address from, address to, uint256 tokenId) public override(ERC721, IERC721) {
       super.transferFrom(from, to, tokenId);
       _updateNFTOwnership(from, to, tokenId);
   }
-
-  function safeTransferFrom(address from, address to, uint256 tokenId) public override(ERC721, IERC721) {
-      super.safeTransferFrom(from, to, tokenId);
-      _updateNFTOwnership(from, to, tokenId);
-  }
-
-  function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public override(ERC721, IERC721) {
-      super.safeTransferFrom(from, to, tokenId, data);
-      _updateNFTOwnership(from, to, tokenId);
-  }
-
 
   /**
    * @param minter address to be authorized
@@ -175,6 +163,23 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
     return s_authorizedMinters[minter];
   }
 
+  function getOwnedNFTsArray(address user) public view returns(uint256[] memory) {
+    return s_ownedNFTsByUser[user];
+  }
+
+  /**
+   * This function updates NFT ownership when the user transfers a particular token to another user
+   * @param from address that currently owns the NFT
+   * @param to recipient address
+   * @param tokenId NFT to be transferred
+   * 
+   * @dev it updates the mapping s_ownedNFTsByUser, using the swap and pop technique to
+   * @dev delete the token from the previous owner and push the tokenId to the array
+   * @dev associated with the new owner
+   * 
+   * @dev it also keeps track of the index at which the tokenId is stored
+   * @dev allowing a gas-efficient and constant-time (0(1)) access to the array
+   */
   function _updateNFTOwnership(address from, address to, uint256 tokenId) internal {
     uint256 indexToRemove = _getIndexToRemove(from, tokenId);
     if (indexToRemove == s_ownedNFTsByUser[from].length - 1) {
@@ -186,6 +191,7 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
       s_ownedNFTsByUser[from].pop();
     }
     s_ownedNFTsByUser[to].push(tokenId);
+    s_arrayIndexByTokenId[to][tokenId] = s_ownedNFTsByUser[to].length - 1;
   }
 
   function _getIndexToRemove(address from, uint256 tokenId) internal view returns(uint256) {
