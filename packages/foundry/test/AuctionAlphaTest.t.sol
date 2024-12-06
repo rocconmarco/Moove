@@ -83,6 +83,10 @@ contract AuctionAlphaTest is Test {
         auctionAlpha.startAuction();
     }
 
+    ///////////////////////////////////////////////
+    ///////////// PLACE BID SECTION ///////////////
+    ///////////////////////////////////////////////
+
     function testPlaceBid() public {
         vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
@@ -102,6 +106,60 @@ contract AuctionAlphaTest is Test {
         assertEq(listOfBids[0].bidder, address(USER1));
         assertEq(listOfBids[0].amount, user1Bid);
         assertEq(listOfBids[0].timestamp, block.timestamp);
+    }
+
+    function testShouldNotAllowToPlaceBidWithZeroEth() public {
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+
+        uint256 initialBalance = 10000000000000000000;
+
+        vm.expectRevert(AuctionAlpha.AuctionAlpha__MustSendEther.selector);
+        hoax(USER1, initialBalance);
+        auctionAlpha.placeBid{value: 0}();
+    }
+
+    function testShouldNotAllowToPlaceBidWhenAuctionClosed() public {
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+
+        uint256 currentAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Auction memory currentAuction = auctionAlpha.getAuctionById(currentAuctionId - 1);
+
+        vm.warp(currentAuction.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
+        auctionAlpha.closeAuction();
+
+        uint256 initialBalance = 10000000000000000000;
+        uint256 user1Bid = 2000000000000000000;
+
+        vm.expectRevert(AuctionAlpha.AuctionAlpha__AuctionClosed.selector);
+        hoax(USER1, initialBalance);
+        auctionAlpha.placeBid{value: user1Bid}();
+    }
+
+    function testShouldNotAllowToPlaceBidWithAmountLowerThanCurrentHighestBid() public {
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+
+        uint256 initialBalance = 10000000000000000000;
+        uint256 currentHighestBid = auctionAlpha.s_currentHighestBid();
+
+        vm.expectRevert(AuctionAlpha.AuctionAlpha__BidAmountMustBeHigherThanCurrentHighestBid.selector);
+        hoax(USER1, initialBalance);
+        auctionAlpha.placeBid{value: currentHighestBid - 1}();
+    }
+
+    function testShouldNotAllowToPlaceBidWithIncorrectIncrement() public {
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+
+        uint256 initialBalance = 10000000000000000000;
+        uint256 currentHighestBid = auctionAlpha.s_currentHighestBid();
+
+        vm.expectRevert(AuctionAlpha.AuctionAlpha__BidAmountIncrementLessThanMinimumBidIncrement.selector);
+        hoax(USER1, initialBalance);
+        auctionAlpha.placeBid{value: currentHighestBid + 1}();
     }
 
     function testMultipleBidsFromTheSameUser() public {
@@ -147,6 +205,104 @@ contract AuctionAlphaTest is Test {
         assertEq(listOfBids[1].amount, user2Bid);
         assertEq(listOfBids[0].timestamp, block.timestamp);
         assertEq(listOfBids[1].timestamp, block.timestamp);
+    }
+
+    function testPlaceBidNonPayable() public {
+        // Open the first auction
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+
+        mooveNFT.addAuthorizedMinter(address(auctionAlpha));
+
+        // First auction list of bids
+        uint256 initialBalance = 10000000000000000000;
+        uint256 user1FirstBid = 2000000000000000000;
+        uint256 user1SecondBid = 1000000000000000000;
+        uint256 user2Bid = 2500000000000000000;
+
+        // A series of bids that sees USER1 as the winner, with a total expense of 3ETH
+        hoax(USER1, initialBalance);
+        auctionAlpha.placeBid{value: user1FirstBid}();
+
+        hoax(USER2, initialBalance);
+        auctionAlpha.placeBid{value: user2Bid}();
+
+        vm.prank(USER1);
+        auctionAlpha.placeBid{value: user1SecondBid}();
+
+        uint256 firstAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Auction memory firstAuction = auctionAlpha.getAuctionById(firstAuctionId - 1);
+
+        vm.warp(firstAuction.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
+        auctionAlpha.closeAuction();
+
+        // USER1 received its NFT, USER2 has a withdrawable balance of 2.5ETH
+
+        uint256 withdrawableAmountForUSER2EndFirstAuction = auctionAlpha.getWithdrawableAmountByBidderAddress(USER2);
+
+        // The second auction is inizialized
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+
+        // Second auction's bid from USER2
+        // The amount should be lower than the withdrawable amount for USER2
+        uint256 secondAuctionBidFromUSER2 = 2000000000000000000;
+
+        vm.prank(USER2);
+        auctionAlpha.placeBidNonPayable(secondAuctionBidFromUSER2);
+
+        assertEq(auctionAlpha.s_currentHighestBid(), secondAuctionBidFromUSER2);
+        assertEq(auctionAlpha.getWithdrawableAmountByBidderAddress(USER2), withdrawableAmountForUSER2EndFirstAuction - secondAuctionBidFromUSER2);
+        assertEq(auctionAlpha.s_currentWinner(), USER2);
+    }
+
+    function testShouldNotAllowToCallPayablePlaceBidFunctionWhenSufficientOnPlatformBalance() public {
+        // Open the first auction
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+
+        mooveNFT.addAuthorizedMinter(address(auctionAlpha));
+
+        // First auction list of bids
+        uint256 initialBalance = 10000000000000000000;
+        uint256 user1FirstBid = 2000000000000000000;
+        uint256 user1SecondBid = 1000000000000000000;
+        uint256 user2Bid = 2500000000000000000;
+
+        // A series of bids that sees USER1 as the winner, with a total expense of 3ETH
+        hoax(USER1, initialBalance);
+        auctionAlpha.placeBid{value: user1FirstBid}();
+
+        hoax(USER2, initialBalance);
+        auctionAlpha.placeBid{value: user2Bid}();
+
+        vm.prank(USER1);
+        auctionAlpha.placeBid{value: user1SecondBid}();
+
+        uint256 firstAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Auction memory firstAuction = auctionAlpha.getAuctionById(firstAuctionId - 1);
+
+        vm.warp(firstAuction.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
+        auctionAlpha.closeAuction();
+
+        // USER1 received its NFT, USER2 has a withdrawable balance of 2.5ETH
+
+        // The second auction is inizialized
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+
+        // Second auction's bid from USER2
+        // The amount should be lower than the withdrawable amount for USER2
+        uint256 secondAuctionBidFromUSER2 = 2000000000000000000;
+
+        // The user will try to call the payable placeBid function
+        // It should revert, since USER2 has sufficient funds to place the bid
+        // without having to send any ETH
+        vm.expectRevert(AuctionAlpha.AuctionAlpha__NoNeedToSendEth.selector);
+        vm.prank(USER2);
+        auctionAlpha.placeBid{value: secondAuctionBidFromUSER2}();
     }
 
     function testWithdrawableAmountCorrectlySetAfterBeingOutbidded() public {
@@ -300,6 +456,10 @@ contract AuctionAlphaTest is Test {
         assertEq(unsoldNFTIsListed, true);
     }
 
+    ///////////////////////////////////////////////
+    ///////// BUY UNSOLD NFT SECTION //////////////
+    ///////////////////////////////////////////////
+
     function testBuyUnsoldNFT() public {
         vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
@@ -325,6 +485,7 @@ contract AuctionAlphaTest is Test {
         // Open the first auction
         vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
+
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
 
         uint256 initialBalance = 10000000000000000000;
@@ -332,7 +493,7 @@ contract AuctionAlphaTest is Test {
         uint256 user1SecondBid = 1000000000000000000;
         uint256 user2Bid = 2500000000000000000;
 
-        // A series of bids that see USER1 as the winner, with a total expense of 3ETH
+        // A series of bids that sees USER1 as the winner, with a total expense of 3ETH
         hoax(USER1, initialBalance);
         auctionAlpha.placeBid{value: user1FirstBid}();
 
@@ -353,6 +514,7 @@ contract AuctionAlphaTest is Test {
 
         uint256 withdrawableAmountForUSER2 = auctionAlpha.getWithdrawableAmountByBidderAddress(USER2);
 
+        // The second auction is inizialized
         vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
 
@@ -373,6 +535,167 @@ contract AuctionAlphaTest is Test {
 
         assertEq(mooveNFT.balanceOf(address(USER2)), 1);
         assertEq(auctionAlpha.getWithdrawableAmountByBidderAddress(USER2), withdrawableAmountForUSER2 - unsoldNFTPrice);
+    }
+
+    function testFailWhenBuyUnsoldNFTWithOnPlatformBalanceAndOnPlatformBalanceEqualsZero() public {
+        // Open the first auction
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+
+        mooveNFT.addAuthorizedMinter(address(auctionAlpha));
+
+        uint256 initialBalance = 10000000000000000000;
+        uint256 user1Bid = 2000000000000000000;
+        uint256 user2Bid = 2500000000000000000;
+
+        // Two consecutive bids that sees USER2 as the winner, with a total expense of 2.5ETH
+        hoax(USER1, initialBalance);
+        auctionAlpha.placeBid{value: user1Bid}();
+
+        hoax(USER2, initialBalance);
+        auctionAlpha.placeBid{value: user2Bid}();
+
+        uint256 firstAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Auction memory firstAuction = auctionAlpha.getAuctionById(firstAuctionId - 1);
+
+        vm.warp(firstAuction.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
+        auctionAlpha.closeAuction();
+
+        // USER2 received its NFT, USER1 has a withdrawable balance of 2ETH
+
+        // The second auction is inizialized
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+
+        uint256 secondAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Auction memory secondAuction = auctionAlpha.getAuctionById(secondAuctionId - 1);
+
+        vm.warp(secondAuction.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
+        auctionAlpha.closeAuction();
+
+        // The auction has closed with zero bids
+        // USER2 wants to buy the unsold NFT with its on platform balance
+        // This is a mistake, since USER2 has no on platform balance
+        // The transaction should revert
+
+        vm.prank(USER2);
+        auctionAlpha.buyUnsoldNFTNonPayable(2);
+    }
+
+    function testBuyUnsoldNFTWithBothOnPlatformBalanceAndSendingETH() public {
+        // Open the first auction
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+
+        mooveNFT.addAuthorizedMinter(address(auctionAlpha));
+
+        uint256 initialBalance = 10000000000000000000;
+        uint256 user1FirstBid = 2000000000000000000;
+        uint256 user1SecondBid = 1000000000000000000;
+        uint256 user2Bid = 2500000000000000000;
+
+        // A series of bids that sees USER1 as the winner, with a total expense of 3ETH
+        hoax(USER1, initialBalance);
+        auctionAlpha.placeBid{value: user1FirstBid}();
+
+        hoax(USER2, initialBalance);
+        auctionAlpha.placeBid{value: user2Bid}();
+
+        vm.prank(USER1);
+        auctionAlpha.placeBid{value: user1SecondBid}();
+
+        uint256 firstAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Auction memory firstAuction = auctionAlpha.getAuctionById(firstAuctionId - 1);
+
+        vm.warp(firstAuction.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
+        auctionAlpha.closeAuction();
+
+        // USER1 received its NFT, USER2 has a withdrawable balance of 2.5ETH
+
+        uint256 withdrawableAmountForUSER2 = auctionAlpha.getWithdrawableAmountByBidderAddress(USER2);
+
+        // Change starting price to test whether the user is allowed to purchase an unsold NFT
+        // with both its on platform balance and sending additional ETH
+
+        auctionAlpha.setStartingPrice(3000000000000000000);
+
+        // The second auction is inizialized
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+
+        uint256 secondAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Auction memory secondAuction = auctionAlpha.getAuctionById(secondAuctionId - 1);
+
+        vm.warp(secondAuction.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
+        auctionAlpha.closeAuction();
+
+        // The auction has closed with zero bids
+        // USER2 wants to buy the unsold NFT with both on platform balance and sending ETH
+
+        uint256 unsoldNFTPrice = auctionAlpha.getUnsoldNFTPrice(2);
+        uint256 amountToSend = unsoldNFTPrice - withdrawableAmountForUSER2; 
+
+        vm.prank(USER2);
+        auctionAlpha.buyUnsoldNFT{value: amountToSend}(2);
+
+        assertEq(mooveNFT.balanceOf(address(USER2)), 1);
+        assertEq(auctionAlpha.getWithdrawableAmountByBidderAddress(USER2), 0);
+    }
+
+    function testShouldFailWhenBuyingUnsoldNFTWithPayableFunctionAndHavingEnoughOnPlatformFunds() public {
+        // Open the first auction
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+
+        mooveNFT.addAuthorizedMinter(address(auctionAlpha));
+
+        uint256 initialBalance = 10000000000000000000;
+        uint256 user1FirstBid = 2000000000000000000;
+        uint256 user1SecondBid = 1000000000000000000;
+        uint256 user2Bid = 2500000000000000000;
+
+        // A series of bids that sees USER1 as the winner, with a total expense of 3ETH
+        hoax(USER1, initialBalance);
+        auctionAlpha.placeBid{value: user1FirstBid}();
+
+        hoax(USER2, initialBalance);
+        auctionAlpha.placeBid{value: user2Bid}();
+
+        vm.prank(USER1);
+        auctionAlpha.placeBid{value: user1SecondBid}();
+
+        uint256 firstAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Auction memory firstAuction = auctionAlpha.getAuctionById(firstAuctionId - 1);
+
+        vm.warp(firstAuction.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
+        auctionAlpha.closeAuction();
+
+        // USER1 received its NFT, USER2 has a withdrawable balance of 2.5ETH
+
+        // The second auction is inizialized
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+
+        uint256 secondAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Auction memory secondAuction = auctionAlpha.getAuctionById(secondAuctionId - 1);
+
+        vm.warp(secondAuction.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
+        auctionAlpha.closeAuction();
+
+        // The auction has closed with zero bids
+        // USER2 wants to buy the unsold NFT calling the payable function even though
+        // it has enough on platform funds to complete the purchase
+        // This behavior should not be allowed
+
+        vm.expectRevert(AuctionAlpha.AuctionAlpha__NoNeedToSendEth.selector);
+        vm.prank(USER2);
+        auctionAlpha.buyUnsoldNFT{value: 1000000000000000000}(2);
     }
 
     function testShouldNotAllowToPurchaseUnsoldNFTWhenSendingIncorrectAmount() public {

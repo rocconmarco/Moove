@@ -18,7 +18,7 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
   error AuctionAlpha__AuctionStillOngoing();
   error AuctionAlpha__AuctionAlreadyOpened();
   error AuctionAlpha__BidAmountMustBeHigherThanCurrentHighestBid();
-  error AuctionAlpha__BidAmountLessThanMinimumBidIncrement();
+  error AuctionAlpha__BidAmountIncrementLessThanMinimumBidIncrement();
   error AuctionAlpha__AuctionClosed();
   error AuctionAlpha__NoAmountToWithdraw();
   error AuctionAlpha__TransferFailed();
@@ -256,7 +256,7 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
       actualBidAmount - s_currentHighestBid
         < s_auctions[s_currentAuctionId - 1].minimumBidIncrement
     ) {
-      revert AuctionAlpha__BidAmountLessThanMinimumBidIncrement();
+      revert AuctionAlpha__BidAmountIncrementLessThanMinimumBidIncrement();
     }
 
     // If it is the first bid, there is no need to update the withdrawable amount for the current winner
@@ -311,7 +311,7 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
       bid - s_currentHighestBid
         < s_auctions[s_currentAuctionId - 1].minimumBidIncrement
     ) {
-      revert AuctionAlpha__BidAmountLessThanMinimumBidIncrement();
+      revert AuctionAlpha__BidAmountIncrementLessThanMinimumBidIncrement();
     }
 
     // If it is the first bid, there is no need to update the withdrawable amount for the current winner
