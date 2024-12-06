@@ -73,7 +73,7 @@ export const AddressInfoDropdown = ({
             </p>
           </div>
 
-          <div className="flex items-center justify-center pb-2">
+          <div className="flex md:hidden items-center justify-center pb-2">
             <div className="flex md:hidden flex-col w-24 items-center">
               <span className="text-xs text-pink">Moove balance</span>
               <MooveBalance address={address} className="min-h-0 h-auto" />

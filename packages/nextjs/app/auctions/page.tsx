@@ -46,10 +46,6 @@ const Auctions: NextPage = () => {
     const minimumBid = parseFloat((currentHighestBidInEth + minimumBidIncrementInEth).toFixed(12));
     const availableFunds = (walletBalance?.value ?? 0n) + (balance ?? 0n);
 
-    console.log("Wallet balance: ", walletBalance?.value);
-    console.log("Moove balance: ", balance);
-    console.log("Available funds: ", availableFunds);
-
     if (balance) {
       setActualBid(formatEther(differenceBetweenBidAndBalance ?? 0n));
       setActualBidMessage(`You only need to send ${formatEther(differenceBetweenBidAndBalance ?? 0n)} ETH`);

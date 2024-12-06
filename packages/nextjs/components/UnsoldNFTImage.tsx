@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import styles from "./NFTImage.module.css";
+import styles from "./UnsoldNFTImage.module.css";
 
-const NFTImage = ({ tokenURI }: { tokenURI: string }) => {
+const UnsoldNFTImage = ({ tokenURI }: { tokenURI: string }) => {
   const [NFTImage, setNFTImage] = useState<string>("/nft-placeholder.jpg");
 
   useEffect(() => {
@@ -81,4 +81,4 @@ const NFTImage = ({ tokenURI }: { tokenURI: string }) => {
   );
 };
 
-export default NFTImage;
+export default UnsoldNFTImage;
