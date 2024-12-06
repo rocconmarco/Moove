@@ -15,7 +15,6 @@ import { formatEther } from "viem";
 const MyNFTs: NextPage = () => {
 const baseURI = "ipfs://bafybeiaepnzx772p5dc2vxbdm6xllkevw6uxu27ncx54cvw2kuloovazcm";
 
-const currentAccount = useAccount();
 const { address } = useAccount();
 
 const { data: ownedNft } = useReadContract({

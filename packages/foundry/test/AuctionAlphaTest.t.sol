@@ -25,6 +25,10 @@ contract AuctionAlphaTest is Test {
         auctionAlpha.setForwarderAddress(forwarderAddress);
     }
 
+    //////////////////////////////////////////////////
+    //////////// INIZIALIZATION SECTION //////////////
+    //////////////////////////////////////////////////
+
     function testVariableInizialization() public view {
         assertEq(auctionAlpha.s_currentAuctionId(), 0);
         assertEq(auctionAlpha.s_currentHighestBid(), 0);
@@ -32,23 +36,9 @@ contract AuctionAlphaTest is Test {
         assertEq(auctionAlpha.s_currentWinner(), address(0));
     }
 
-    function testShouldNotAllowToPlaceBidWhenAuctionStillNotInizialized() public {
-        vm.prank(USER1);
-        vm.expectRevert(AuctionAlpha.AuctionAlpha__AuctionProcessStillNotInizialized.selector);
-        auctionAlpha.placeBid();
-    }
-
-    function testShouldRevertIfAmountToWithdrawEqualsZero() public {
-        vm.prank(USER1);
-        vm.expectRevert(AuctionAlpha.AuctionAlpha__WithdrawAmountMustBeGreaterThanZero.selector);
-        auctionAlpha.withdrawBid(0);
-    }
-
-    function testShouldNotAllowToWitdrawIfNoAmountToWithdraw() public {
-        vm.prank(USER1);
-        vm.expectRevert(AuctionAlpha.AuctionAlpha__NoAmountToWithdraw.selector);
-        auctionAlpha.withdrawBid(1);
-    }
+    ////////////////////////////////////////////////////
+    //////////// START AUCTION SECTION /////////////////
+    ////////////////////////////////////////////////////
 
     function testStartAuction() public {
         vm.prank(forwarderAddress);
@@ -106,6 +96,36 @@ contract AuctionAlphaTest is Test {
         assertEq(listOfBids[0].bidder, address(USER1));
         assertEq(listOfBids[0].amount, user1Bid);
         assertEq(listOfBids[0].timestamp, block.timestamp);
+    }
+
+    function testSecondBidFromTheSameUser() public {
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+
+        uint256 initialBalance = 10000000000000000000;
+        uint256 user1FirstBid = 2000000000000000000;
+        uint256 user1SecondBid = 1000000000000000000;
+        uint256 user2Bid = 2500000000000000000;
+
+        hoax(USER1, initialBalance);
+        auctionAlpha.placeBid{value: user1FirstBid}();
+
+        hoax(USER2, initialBalance);
+        auctionAlpha.placeBid{value: user2Bid}();
+
+        uint256 withdrawableAmountUser1 = auctionAlpha.getWithdrawableAmountByBidderAddress(address(USER1));
+
+        vm.prank(USER1);
+        auctionAlpha.placeBid{value: user1SecondBid}();
+
+        assertEq(auctionAlpha.s_currentHighestBid(), withdrawableAmountUser1 + user1SecondBid);
+        assertEq(auctionAlpha.getWithdrawableAmountByBidderAddress(address(USER1)), 0);
+    }
+
+    function testShouldNotAllowToPlaceBidWhenAuctionStillNotInizialized() public {
+        vm.prank(USER1);
+        vm.expectRevert(AuctionAlpha.AuctionAlpha__AuctionProcessStillNotInizialized.selector);
+        auctionAlpha.placeBid();
     }
 
     function testShouldNotAllowToPlaceBidWithZeroEth() public {
@@ -324,6 +344,10 @@ contract AuctionAlphaTest is Test {
         assertEq(withdrawableAmountForUser1, user1Bid);
     }
 
+    ///////////////////////////////////////////////
+    //////////// WITHDRAW BID SECTION /////////////
+    ///////////////////////////////////////////////
+
     function testWithdrawBid() public {
         vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
@@ -375,29 +399,21 @@ contract AuctionAlphaTest is Test {
         auctionAlpha.withdrawBid(user1Bid + 1);
     }
 
-    function testSecondBidFromTheSameUser() public {
-        vm.prank(forwarderAddress);
-        auctionAlpha.startAuction();
-
-        uint256 initialBalance = 10000000000000000000;
-        uint256 user1FirstBid = 2000000000000000000;
-        uint256 user1SecondBid = 1000000000000000000;
-        uint256 user2Bid = 2500000000000000000;
-
-        hoax(USER1, initialBalance);
-        auctionAlpha.placeBid{value: user1FirstBid}();
-
-        hoax(USER2, initialBalance);
-        auctionAlpha.placeBid{value: user2Bid}();
-
-        uint256 withdrawableAmountUser1 = auctionAlpha.getWithdrawableAmountByBidderAddress(address(USER1));
-
+    function testShouldRevertIfAmountToWithdrawEqualsZero() public {
         vm.prank(USER1);
-        auctionAlpha.placeBid{value: user1SecondBid}();
-
-        assertEq(auctionAlpha.s_currentHighestBid(), withdrawableAmountUser1 + user1SecondBid);
-        assertEq(auctionAlpha.getWithdrawableAmountByBidderAddress(address(USER1)), 0);
+        vm.expectRevert(AuctionAlpha.AuctionAlpha__WithdrawAmountMustBeGreaterThanZero.selector);
+        auctionAlpha.withdrawBid(0);
     }
+
+    function testShouldNotAllowToWitdrawIfNoAmountToWithdraw() public {
+        vm.prank(USER1);
+        vm.expectRevert(AuctionAlpha.AuctionAlpha__NoAmountToWithdraw.selector);
+        auctionAlpha.withdrawBid(1);
+    }
+
+    ////////////////////////////////////////////////
+    //////////// CLOSE AUCTION SECTION /////////////
+    ////////////////////////////////////////////////
 
     function testShouldNotAllowToCloseAuctionBeforeTime() public {
         vm.prank(forwarderAddress);
@@ -698,7 +714,7 @@ contract AuctionAlphaTest is Test {
         auctionAlpha.buyUnsoldNFT{value: 1000000000000000000}(2);
     }
 
-    function testShouldNotAllowToPurchaseUnsoldNFTWhenSendingIncorrectAmount() public {
+    function testShouldNotAllowToBuyUnsoldNFTWhenSendingIncorrectAmount() public {
         vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
@@ -718,7 +734,7 @@ contract AuctionAlphaTest is Test {
         auctionAlpha.buyUnsoldNFT{value: tokenPrice + 1}(1);
     }
 
-    function testShouldNotAllowToPurchaseNonListedUnsoldNFT() public {
+    function testShouldNotAllowToBuyNonListedUnsoldNFT() public {
         vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
         mooveNFT.addAuthorizedMinter(address(auctionAlpha));
@@ -856,6 +872,10 @@ contract AuctionAlphaTest is Test {
         auctionAlpha.buyUnsoldNFT{value: tokenPrice}(1);
     }
 
+    ////////////////////////////////////////////////////
+    /////////// SETTER FUNCTIONS SECTION ///////////////
+    ////////////////////////////////////////////////////
+
     function testSetStartingPriceAndSetMinimumBidIncrement() public {
         uint256 defaultStartingPrice = auctionAlpha.s_startingPrice();
         uint256 defaultMinimumBidIncrement = auctionAlpha.s_minimumBidIncrement();
@@ -932,6 +952,10 @@ contract AuctionAlphaTest is Test {
         vm.prank(USER1);
         auctionAlpha.setMinimumBidIncrement(newMinimumBidIncrement);
     }
+
+    //////////////////////////////////////////////////
+    ///////////////// OTHER TESTS ////////////////////
+    //////////////////////////////////////////////////
 
     /**
      * This test is a combination between testCloseAuction from AuctionAlphaTest and 

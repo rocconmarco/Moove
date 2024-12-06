@@ -137,9 +137,6 @@ contract MooveNFTTest is Test {
         assertEq(mooveNFT.balanceOf(USER2), 1);
     }
 
-    // The following tests are aimed at evaluating the new functionalites of tracking
-    // the nft owned by a single user and the correct implementation of update functions
-
     function testUpdateOwnedNFTArrayWhenMinting() public {
         mooveNFT.addAuthorizedMinter(USER1);
 
