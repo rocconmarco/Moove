@@ -35,6 +35,8 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
   error AuctionAlpha__StartingPriceMustBeGreaterThanZero();
   error AuctionAlpha__MinimumBidIncrementMustBeGreaterThanZero();
   error AuctionAlpha__ForwarderAddressMustNotBeAddressZero();
+  error AuctionAlpha__NotEnoughFundsAvailableOnPlatform();
+  error AuctionAlpha__NoNeedToSendEth();
 
 
   struct Auction {
@@ -234,12 +236,19 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
       revert AuctionAlpha__SenderIsAlreadyTheCurrentWinner();
     }
 
-    uint256 actualBidAmount =
-      s_withdrawableAmountPerBidder[msg.sender] + msg.value;
+    uint256 availableFunds = s_withdrawableAmountPerBidder[msg.sender];
+
+    if (availableFunds >= s_currentHighestBid + s_auctions[s_currentAuctionId - 1].minimumBidIncrement) {
+      revert AuctionAlpha__NoNeedToSendEth();
+    }
 
     if (msg.value == 0) {
       revert AuctionAlpha__MustSendEther();
     }
+
+    uint256 actualBidAmount =
+      s_withdrawableAmountPerBidder[msg.sender] + msg.value;
+
     if (actualBidAmount <= s_currentHighestBid) {
       revert AuctionAlpha__BidAmountMustBeHigherThanCurrentHighestBid();
     }
@@ -276,6 +285,59 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
     s_withdrawableAmountPerBidder[msg.sender] = 0;
 
     emit BidPlaced(msg.sender, s_currentAuctionId, actualBidAmount);
+  }
+
+  function placeBidNonPayable(uint256 bid) public {
+    if (s_currentAuctionId == 0) {
+      revert AuctionAlpha__AuctionProcessStillNotInizialized();
+    }
+    if (_isAuctionClosed()) {
+      revert AuctionAlpha__AuctionClosed();
+    }
+    if (s_currentWinner == msg.sender) {
+      revert AuctionAlpha__SenderIsAlreadyTheCurrentWinner();
+    }
+
+    uint256 availableFunds = s_withdrawableAmountPerBidder[msg.sender];
+
+    if (availableFunds < bid) {
+      revert AuctionAlpha__NotEnoughFundsAvailableOnPlatform();
+    }
+
+    if (bid <= s_currentHighestBid) {
+      revert AuctionAlpha__BidAmountMustBeHigherThanCurrentHighestBid();
+    }
+    if (
+      bid - s_currentHighestBid
+        < s_auctions[s_currentAuctionId - 1].minimumBidIncrement
+    ) {
+      revert AuctionAlpha__BidAmountLessThanMinimumBidIncrement();
+    }
+
+    // If it is the first bid, there is no need to update the withdrawable amount for the current winner
+    // since it doesn't exist yet, otherwise the function will take the current highest bid value and assign it
+    // to the current winner in the withdrawable amount mapping, then we are ready to register the new bidder as the
+    // current winner, with the amount sent with the transaction as the current highest bid
+    if (s_currentWinner != address(0)) {
+      s_withdrawableAmountPerBidder[s_currentWinner] += s_currentHighestBid;
+    }
+
+    // Updating all the state variables and pushing a new Bid element in the array stored inside the bidHistory mapping
+    s_listOfHighestBidPerUser[s_currentAuctionId][msg.sender] = bid;
+    s_currentHighestBid = bid;
+    s_currentWinner = msg.sender;
+    s_bidHistory[s_currentAuctionId].push(
+      Bid({
+        bidder: msg.sender,
+        amount: bid,
+        timestamp: block.timestamp
+      })
+    );
+    
+    // Deducting the bid amount from the withdrawable amount of the user
+    s_withdrawableAmountPerBidder[msg.sender]-= bid;
+
+    emit BidPlaced(msg.sender, s_currentAuctionId, bid);
   }
 
   /**
@@ -405,12 +467,20 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
    * The value sent by the buyer in the transaction must be EXACTLY equal to the selling price
    * Otherwise the function will revert for incorrect payment
    */
-  function buyUnsoldNFT(uint256 tokenId) public payable {
+  function buyUnsoldNFT(uint256 tokenId) public payable nonReentrant {
     if (!s_isTokenListed[tokenId]) {
       revert AuctionAlpha__TokenNotAvailable();
     }
     uint256 unsoldNFTPrice = s_unsoldNFTsSellingPrice[tokenId];
-    if (msg.value != unsoldNFTPrice) {
+    uint256 availableFunds = s_withdrawableAmountPerBidder[msg.sender];
+
+    // The user should call the non payable function to avoid wasting funds
+    if (availableFunds >= unsoldNFTPrice) {
+      revert AuctionAlpha__NoNeedToSendEth();
+    }
+
+    uint256 amountEqualToTokenPrice = availableFunds + msg.value;
+    if (amountEqualToTokenPrice != unsoldNFTPrice) {
       revert AuctionAlpha__IncorrectPayment();
     }
 
@@ -418,6 +488,49 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
     // for a second user to purchase the same token, since it will not pass
     // the first check of this function
     s_isTokenListed[tokenId] = false;
+
+    // Resetting the withdrawable amount for the sender of the transaction
+    // The user must use all of its withdrawable amount, as well as additional funds,
+    // to purchase the intended unsold NFT
+    s_withdrawableAmountPerBidder[msg.sender] = 0;
+
+    // Applying the swap & pop tecnique to delete the purchased NFT from the list of unsold NFTs
+    // ATTENTION: the order of the array will be changed
+    uint256 indexToRemove = _getArrayIndexOfUnsoldNFT(tokenId);
+    if (indexToRemove == s_listOfUnsoldNFTs.length - 1) {
+      s_listOfUnsoldNFTs.pop();
+    } else {
+      UnsoldNFT memory lastUnsoldNFT = s_listOfUnsoldNFTs[s_listOfUnsoldNFTs.length - 1];
+      s_listOfUnsoldNFTs[indexToRemove] = lastUnsoldNFT;
+      s_tokenIdToArrayIndexUnsoldNFTs[lastUnsoldNFT.tokenId] = indexToRemove;
+      s_listOfUnsoldNFTs.pop();
+    }
+    i_nftContract.safeMint(msg.sender, tokenId);
+  }
+
+  /**
+   * This function is called when the user wants to buy an unsold NFT
+   * and its withdrawable amount is sufficient to cover the expense
+   * In this case there is no need to call a payable function
+   */
+  function buyUnsoldNFTNonPayable(uint256 tokenId) public {
+    if (!s_isTokenListed[tokenId]) {
+      revert AuctionAlpha__TokenNotAvailable();
+    }
+    uint256 unsoldNFTPrice = s_unsoldNFTsSellingPrice[tokenId];
+    uint256 availableFunds = s_withdrawableAmountPerBidder[msg.sender];
+
+    if (unsoldNFTPrice > availableFunds) {
+      revert AuctionAlpha__NotEnoughFundsAvailableOnPlatform();
+    }
+
+    // The token will be delisted from the mapping, it will be impossible
+    // for a second user to purchase the same token, since it will not pass
+    // the first check of this function
+    s_isTokenListed[tokenId] = false;
+
+    // Deducting the unsold NFT price from the withdrawable amount of the user
+    s_withdrawableAmountPerBidder[msg.sender] -= unsoldNFTPrice;
 
     // Applying the swap & pop tecnique to delete the purchased NFT from the list of unsold NFTs
     // ATTENTION: the order of the array will be changed

@@ -321,6 +321,60 @@ contract AuctionAlphaTest is Test {
         assertEq(mooveNFT.balanceOf(address(USER1)), 1);
     }
 
+    function testBuyUnsoldNFTWithOnPlatformBalance() public {
+        // Open the first auction
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+        mooveNFT.addAuthorizedMinter(address(auctionAlpha));
+
+        uint256 initialBalance = 10000000000000000000;
+        uint256 user1FirstBid = 2000000000000000000;
+        uint256 user1SecondBid = 1000000000000000000;
+        uint256 user2Bid = 2500000000000000000;
+
+        // A series of bids that see USER1 as the winner, with a total expense of 3ETH
+        hoax(USER1, initialBalance);
+        auctionAlpha.placeBid{value: user1FirstBid}();
+
+        hoax(USER2, initialBalance);
+        auctionAlpha.placeBid{value: user2Bid}();
+
+        vm.prank(USER1);
+        auctionAlpha.placeBid{value: user1SecondBid}();
+
+        uint256 firstAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Auction memory firstAuction = auctionAlpha.getAuctionById(firstAuctionId - 1);
+
+        vm.warp(firstAuction.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
+        auctionAlpha.closeAuction();
+
+        // USER1 received its NFT, USER2 has a withdrawable balance of 2.5ETH
+
+        uint256 withdrawableAmountForUSER2 = auctionAlpha.getWithdrawableAmountByBidderAddress(USER2);
+
+        vm.prank(forwarderAddress);
+        auctionAlpha.startAuction();
+
+        uint256 secondAuctionId = auctionAlpha.s_currentAuctionId();
+        AuctionAlpha.Auction memory secondAuction = auctionAlpha.getAuctionById(secondAuctionId - 1);
+
+        vm.warp(secondAuction.openingTimestamp + 30 days);
+        vm.prank(forwarderAddress);
+        auctionAlpha.closeAuction();
+
+        // The auction has closed with zero bids
+        // USER2 wants to buy the unsold NFT with its on platform balance
+
+        uint256 unsoldNFTPrice = auctionAlpha.getUnsoldNFTPrice(2);
+
+        vm.prank(USER2);
+        auctionAlpha.buyUnsoldNFTNonPayable(2);
+
+        assertEq(mooveNFT.balanceOf(address(USER2)), 1);
+        assertEq(auctionAlpha.getWithdrawableAmountByBidderAddress(USER2), withdrawableAmountForUSER2 - unsoldNFTPrice);
+    }
+
     function testShouldNotAllowToPurchaseUnsoldNFTWhenSendingIncorrectAmount() public {
         vm.prank(forwarderAddress);
         auctionAlpha.startAuction();
