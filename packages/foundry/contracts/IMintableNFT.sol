@@ -13,6 +13,10 @@ interface IMintableNFT is IERC721 {
     function mint(address to, uint256 tokenId) external;
 
     function safeMint(address to, uint256 tokenId) external;
+
+    function addAuthorizedMinter(address minter) external;
+
+    function removeAuthorizedMinter(address minter) external;
     
     function getMaxSupply() external view returns(uint256);
 }

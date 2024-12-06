@@ -21,7 +21,7 @@ contract MooveNFTTest is Test {
         assertEq(mooveNFT.symbol(), "MOOVE");
     }
 
-    function testFailAnauthorizedMinting() public {
+    function testFailUnauthorizedMinting() public {
         mooveNFT.mint(USER1, 1);
         assertEq(mooveNFT.balanceOf(USER1), 1);
     }

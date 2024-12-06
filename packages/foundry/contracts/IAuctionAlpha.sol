@@ -14,6 +14,8 @@ interface IAuctionAlpha {
 
     function placeBid() external payable;
 
+    function placeBidNonPayable(uint256 bid) external;
+
     function withdrawBid(uint256 withdrawAmount) external;
 
     function startAuction() external;
@@ -21,6 +23,8 @@ interface IAuctionAlpha {
     function closeAuction() external;
 
     function buyUnsoldNFT(uint256 tokenId) external payable;
+
+    function buyUnsoldNFTNonPayable(uint256 tokenId) external;
 
     function setForwarderAddress(address forwarderAddress) external;
 

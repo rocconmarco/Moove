@@ -54,7 +54,6 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
   mapping (address => mapping(uint256 => uint256)) private s_arrayIndexByTokenId;
 
 
-
   /**
    * @param baseURI the base URI for Moove NFTs' metadata stored in IPFS, the format of the string should be ipfs://<CID>
    * The ERC721 token is inizialized with the name "MooveNFT" and with the symbol "MOOVE"
@@ -140,7 +139,7 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
     s_authorizedMinters[minter] = true;
   }
 
-    /**
+  /**
    * @param minter address to be removed from the list of authorized minters
    * @dev This function allows the owner of the contract to revoke minting rights
    * @dev over the NFT collection for a particular address
