@@ -46,6 +46,19 @@ export const AuctionAlphaAbi = [
   },
   {
     type: "function",
+    name: "buyUnsoldNFTNonPayable",
+    inputs: [
+      {
+        name: "tokenId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
     name: "checkUpkeep",
     inputs: [
       {
@@ -331,6 +344,19 @@ export const AuctionAlphaAbi = [
     inputs: [],
     outputs: [],
     stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "placeBidNonPayable",
+    inputs: [
+      {
+        name: "bid",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
   },
   {
     type: "function",
@@ -798,7 +824,7 @@ export const AuctionAlphaAbi = [
   },
   {
     type: "error",
-    name: "AuctionAlpha__BidAmountLessThanMinimumBidIncrement",
+    name: "AuctionAlpha__BidAmountIncrementLessThanMinimumBidIncrement",
     inputs: [],
   },
   {
@@ -834,6 +860,16 @@ export const AuctionAlphaAbi = [
   {
     type: "error",
     name: "AuctionAlpha__NoAmountToWithdraw",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "AuctionAlpha__NoNeedToSendEth",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "AuctionAlpha__NotEnoughFundsAvailableOnPlatform",
     inputs: [],
   },
   {

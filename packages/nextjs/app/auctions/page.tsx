@@ -21,7 +21,8 @@ const Auctions: NextPage = () => {
   const [balance, setBalance] = useState<bigint | null>(null);
   const [actualBid, setActualBid] = useState<string>("");
   const [actualBidMessage, setActualBidMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<boolean>(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
+  const [showErrorMessage, setShowErrorMessage] = useState<boolean>(false);
 
   const nativeCurrencyPrice = useGlobalState(state => state.nativeCurrency.price);
 
@@ -170,37 +171,53 @@ const Auctions: NextPage = () => {
     },
   });
 
-  const { writeContract, isSuccess } = useWriteContract();
+  const { writeContract, isSuccess, isError, error } = useWriteContract();
 
   useEffect(() => {
     if (isSuccess) {
       setUserBid("");
       setBidError(null);
-      setSuccessMessage(true);
+      setShowSuccessMessage(true);
     }
   }, [isSuccess]);
 
   useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => {
-        setSuccessMessage(false);
+    if (showSuccessMessage) {
+      const timeout = setTimeout(() => {
+        setShowSuccessMessage(false);
       }, 5000);
 
-      return () => clearTimeout(timer);
+      return () => clearTimeout(timeout);
     }
-  }, [successMessage]);
+  }, [showSuccessMessage]);
+
+  useEffect(() => {
+  if (isError) {
+    setShowErrorMessage(true);
+    const timeout = setTimeout(() => setShowErrorMessage(false), 5000);
+    return () => clearTimeout(timeout);
+  }
+}, [isError]);
 
   useEffect(() => {
     setBalance(userBalance ?? null);
   }, [userBalance]);
 
-  const handlePlaceBid = () => {
+  const handlePlaceBidPayable = () => {
     writeContract({
       ...auctionAlphaContract,
       functionName: "placeBid",
       value: balance ? parseEther(actualBid) : parseEther(userBid),
     });
   };
+
+  const handlePlaceBidNonPayable = () => {
+    writeContract({
+      ...auctionAlphaContract,
+      functionName: "placeBidNonPayable",
+      args: [parseEther(userBid)]
+    })
+  }
 
   const startingPrice: string = formatEther(auction?.[4] ?? BigInt(0)).toString();
   const startingPriceInUsd: string = (Number(formatEther(auction?.[4] ?? BigInt(0))) * nativeCurrencyPrice).toFixed(2);
@@ -289,7 +306,16 @@ const Auctions: NextPage = () => {
                     )}
                   </div>
 
-                  {actualBidMessage && userBid && !bidError && (
+                  {parseEther(actualBid) <= 0 && (balance && balance > 0) && userBid && !bidError && (
+                    <div className="flex items-center space-x-2">
+                    <p className="text-green-500 text-sm my-0">You have enough MOOVE balance to place the bid</p>
+                    <InfoIcon
+                      text={"You will not need to send any additional ETH to place the bid. The amount will be deducted from your MOOVE Balance."}
+                    />
+                  </div>
+                  )}
+
+                  {parseEther(actualBid) > 0 && actualBidMessage && userBid && !bidError && (
                     <div className="flex items-center space-x-2">
                       <p className="text-green-500 text-sm my-0">{actualBidMessage}</p>
                       <InfoIcon
@@ -300,11 +326,19 @@ const Auctions: NextPage = () => {
                     </div>
                   )}
 
-                  {isSuccess && successMessage && (
+                  {isSuccess && showSuccessMessage && (
                     <div className="flex items-center space-x-2">
                       <div className="flex">
                         <p className="text-green-500 text-sm my-0 mr-1">Bid placed correctly</p>
                         <CheckCircleIcon className="my-0" color="#22c55e" width={20} height={20} />
+                      </div>
+                    </div>
+                  )}
+
+                  {showErrorMessage && error?.message && (
+                    <div className="flex items-center space-x-2">
+                      <div className="flex">
+                        <p className="text-red-500 text-sm my-0 mr-1">{error.message || "Transaction failed. Please try again."}</p>
                       </div>
                     </div>
                   )}
@@ -346,7 +380,7 @@ const Auctions: NextPage = () => {
                       !currentAccount.address ||
                       currentAccount.address === currentWinner
                     }
-                    onClick={handlePlaceBid}
+                    onClick={((parseEther(actualBid) <= 0) && (balance && balance > 0) && userBid && !bidError) ? handlePlaceBidNonPayable : handlePlaceBidPayable}
                   >
                     Place your bid
                   </button>
