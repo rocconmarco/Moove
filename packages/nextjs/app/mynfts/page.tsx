@@ -5,12 +5,12 @@ import styles from "./MyNFTs.module.css";
 import clsx from "clsx";
 import type { NextPage } from "next";
 import { useAccount, useReadContract } from "wagmi";
-import { auctionAlphaContract, mooveNFTContract } from "~~/contracts/contractsInfo";
+import { mooveNFTContract } from "~~/contracts/contractsInfo";
 import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
 import Link from "next/link";
-import UnsoldNFTImage from "~~/components/UnsoldNFTImage";
 import NFTName from "~~/components/NFTName";
 import { formatEther } from "viem";
+import MyNFTImage from "~~/components/MyNFTImage";
 
 const MyNFTs: NextPage = () => {
 const baseURI = "ipfs://bafybeiaepnzx772p5dc2vxbdm6xllkevw6uxu27ncx54cvw2kuloovazcm";
@@ -96,15 +96,12 @@ const { data: ownedNft } = useReadContract({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 px-[108px] gap-x-4 gap-y-10 mt-8 w-screen">
               {ownedNft?.map(item => (
                 <div className="flex flex-col items-center" key={item}>
-                  <UnsoldNFTImage tokenURI={`${baseURI}/${item}.json`} />
-                  <div className="flex items-center justify-between space-y-4 gap-4 w-[250px]">
+                  <MyNFTImage tokenURI={`${baseURI}/${item}.json`} />
+                  <div className="flex items-center justify-center space-y-4 gap-4 w-[250px]">
                     <div className="space-y-0 flex flex-col items-start justify-center">
                       <p className="font-bold text-xl md:text-2xl mb-0">
                         <NFTName tokenURI={`${baseURI}/${item}.json`} />
                       </p>
-                      {/* <span className="text-lg tracking-wide font-bold text-lightPurple">
-                        {formatEther(item.sellingPrice)} ETH
-                      </span> */}
                     </div>
                   </div>
                 </div>

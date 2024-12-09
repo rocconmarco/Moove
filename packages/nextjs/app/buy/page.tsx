@@ -72,7 +72,7 @@ const Buy: NextPage = () => {
   };
 
   const isMooveBalanceEnough = (sellingPrice: bigint): boolean => {
-    return (userBalance ?? 0n) > sellingPrice;
+    return (userBalance ?? 0n) >= sellingPrice;
   };
 
   const handleCloseModal = () => {

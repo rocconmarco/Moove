@@ -335,10 +335,10 @@ const Auctions: NextPage = () => {
                     </div>
                   )}
 
-                  {showErrorMessage && error?.message && (
+                  {isError && showErrorMessage && error?.message && (
                     <div className="flex items-center space-x-2">
                       <div className="flex">
-                        <p className="text-red-500 text-sm my-0 mr-1">{error.message || "Transaction failed. Please try again."}</p>
+                        <p className="text-red-500 text-sm my-0 mr-1">{error?.message || "Transaction failed. Please try again."}</p>
                       </div>
                     </div>
                   )}
