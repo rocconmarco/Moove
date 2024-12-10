@@ -80,7 +80,6 @@ const StyledTable: React.FC<{ auctionId: bigint }> = ({ auctionId }) => {
       </h1>
       
       <div className="relative">
-        {/* Table Header */}
         <div className="tbl-header rounded-t-xl bg-darkPurple">
           <table className="w-full table-fixed">
             <thead>
@@ -93,7 +92,6 @@ const StyledTable: React.FC<{ auctionId: bigint }> = ({ auctionId }) => {
           </table>
         </div>
         
-        {/* Table Content */}
         <div className="tbl-content h-[300px] overflow-x-auto border border-white/30">
           <table className="w-full table-fixed">
             <tbody>
