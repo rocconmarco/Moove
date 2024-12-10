@@ -17,17 +17,14 @@ const NFTName = ({ tokenURI }: { tokenURI: string }) => {
         const [cid, ...path] = cidAndPath.split("/");
         
         if (!cid) {
-          /* console.error("Invalid IPFS URI format"); */
           setNftName("Invalid URI format");
           return;
         }
 
         const url = `https://${cid}.ipfs.w3s.link/${path.join("/")}`;
-        /* console.log("Fetching from URL:", url); */
         
         const response = await fetch(url);
         if (!response.ok) {
-          /* console.error("HTTP Error:", response.status); */
           setNftName(`Error: ${response.status}`);
           return;
         }
@@ -38,7 +35,6 @@ const NFTName = ({ tokenURI }: { tokenURI: string }) => {
         try {
           metadata = JSON.parse(text);
         } catch (e) {
-          /* console.error("JSON Parse Error:", e); */
           setNftName("Invalid metadata format");
           return;
         }
@@ -62,7 +58,6 @@ const NFTName = ({ tokenURI }: { tokenURI: string }) => {
           setNftName("Unknown Vehicle");
         }
       } catch (error) {
-        /* console.error("Error in fetchTokenMetadata:", error); */
         setNftName("Error loading vehicle");
       }
     };

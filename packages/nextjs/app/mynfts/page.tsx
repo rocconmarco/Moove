@@ -1,15 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import styles from "./MyNFTs.module.css";
-import clsx from "clsx";
 import type { NextPage } from "next";
 import { useAccount, useReadContract } from "wagmi";
 import { mooveNFTContract } from "~~/contracts/contractsInfo";
 import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
 import Link from "next/link";
 import NFTName from "~~/components/NFTName";
-import { formatEther } from "viem";
 import MyNFTImage from "~~/components/MyNFTImage";
 
 const MyNFTs: NextPage = () => {

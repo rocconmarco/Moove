@@ -1,9 +1,8 @@
 import React from 'react';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useReadContract } from "wagmi";
 import { formatEther } from "viem"; 
 import { auctionAlphaContract } from "~~/contracts/contractsInfo";
-
 
 interface Bid {
   bidder: string;
@@ -21,7 +20,6 @@ const StyledTable: React.FC<{ auctionId: bigint }> = ({ auctionId }) => {
     }
   })
 
-  // Gestione scrollbar
   useEffect(() => {
     const handleResize = () => {
       const content = document.querySelector('.tbl-content');

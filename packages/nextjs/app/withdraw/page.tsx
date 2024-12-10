@@ -15,8 +15,6 @@ const Withdraw: NextPage = () => {
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<boolean>(false);
 
-  const nativeCurrencyPrice = useGlobalState(state => state.nativeCurrency.price);
-
   const currentAccount = useAccount();
 
   const handleMaxAmount = () => {
@@ -46,7 +44,6 @@ const Withdraw: NextPage = () => {
     console.log("Withdraw error: ", withdrawError);
 
     const parsedWithdrawAmount = parseFloat(withdrawAmount);
-    const bidAmountInWei = parseEther(withdrawAmount);
     const parsedUserBalance = Number(formatEther(userBalance ?? 0n));
 
     console.log("Parsed withdraw amount: ", parsedWithdrawAmount);

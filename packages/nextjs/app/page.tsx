@@ -2,12 +2,10 @@
 
 import styles from "./HomePage.module.css";
 import type { NextPage } from "next";
-import { useAccount } from "wagmi";
 import { CardsFan } from "~~/components/CardsFan";
 import { ImageSlider } from "~~/components/ImageSlider";
 
 const Home: NextPage = () => {
-  const { address: connectedAddress } = useAccount();
 
   return (
     <>
