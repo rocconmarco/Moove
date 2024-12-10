@@ -1,6 +1,11 @@
-import Image from "next/image";
 import Link from "next/link";
 import { NextPage } from "next";
+import { getMetadata } from "~~/utils/scaffold-eth/getMetadata";
+
+export const metadata = getMetadata({
+    title: "404 - Page Not Found",
+    description: "Get your pass to the future of sustainable mobility."
+})
 
 const NotFound: NextPage = () => {
   return (
