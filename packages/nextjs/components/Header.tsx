@@ -4,8 +4,7 @@ import React, { useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRouter } from "next/router";
-import { Bars3Icon, BugAntIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useOutsideClick } from "~~/hooks/scaffold-eth";
 
@@ -35,11 +34,6 @@ export const menuLinks: HeaderMenuLink[] = [
     label: "About",
     href: "/about",
   },
-
-  {
-    label: "Playground",
-    href: "/playground",
-  },
 ];
 
 export const HeaderMenuLinks = () => {
@@ -68,9 +62,6 @@ export const HeaderMenuLinks = () => {
   );
 };
 
-/**
- * Site header
- */
 export const Header = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const burgerMenuRef = useRef<HTMLDivElement>(null);

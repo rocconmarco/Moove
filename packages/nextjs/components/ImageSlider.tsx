@@ -13,7 +13,7 @@ interface ItemStyle extends CSSProperties {
 
 export const ImageSlider = () => {
   return (
-    <div className={styles.banner}>
+    <div className={`${styles.banner}`}>
       <div className={styles.slider} style={{"--quantity" : 10} as SliderStyle}>
         <div className={styles.item}  style={{"--position" : 1} as ItemStyle}>
           <img src="/nft-images/boat.jpg" alt="boat"></img>

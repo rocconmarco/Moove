@@ -29,6 +29,16 @@
 }
 
 @media screen and (max-width: 640px) {
+    .banner {
+        padding-top: 20px;
+        width: 100vw;
+        height: 600px;
+        text-align: center;
+        overflow: hidden;
+        position: relative;
+        animation: appearWhenReload 2s linear;
+    }
+
     .banner .slider {
         position: absolute;
         width: 140px;

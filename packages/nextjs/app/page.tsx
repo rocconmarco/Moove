@@ -12,7 +12,7 @@ const Home: NextPage = () => {
   return (
     <>
       <div className="flex flex-col items-center flex-grow z-10 pt-8">
-        <div className="px-5">
+        <div className="w-[100vw]">
           <h1 className={`${styles.title} text-center`}>
             <span className="block text-3xl sm:text-5xl mb-2 text-white shadow-inner">
               Get your pass to the future of
@@ -73,7 +73,7 @@ const Home: NextPage = () => {
           </div>
         </div>
 
-        <div className="flex flex-col items-center w-full px-5 lg:px-20 my-40 h-[600px]">
+        <div className="flex flex-col items-center w-full px-5 lg:px-20 mb-40 h-[600px]">
           <div className={`${styles.description} opacity-0 flex flex-col items-center w-full lg:w-[70%] pt-4`}>
             <h2>
               <span className="block text-3xl sm:text-5xl mb-2 text-white shadow-inner text-center">Introducing</span>
@@ -87,12 +87,12 @@ const Home: NextPage = () => {
             </p>
           </div>
 
-          <div className={`w-1/2 h-full`}>
+          <div className="w-1/2 h-full">
             <CardsFan />
           </div>
         </div>
 
-        <div className="flex flex-col w-full px-5 lg:px-20 my-40 h-[600px] items-center">
+        <div className="flex flex-col w-full px-5 lg:px-20 my-0 md:my-40 mb-40 h-[600px] items-center">
           <div className={`${styles.description} opacity-0 flex flex-col w-full pt-4`}>
             <h2>
               <span className="block text-3xl sm:text-5xl mb-2 text-center text-white shadow-inner">
