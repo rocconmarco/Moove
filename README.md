@@ -1,7 +1,7 @@
 <br />
 <div id="readme-top" align="center">
   <a href="">
-    <img src="/packages/nextjs/public/logo.png/" alt="Moove Logo" width="100" height="30">
+    <img src="/packages/nextjs/public/logo.png/" alt="Moove Logo" width="130" height="30">
   </a>
 
 <h3 align="center">Moove</h3>
@@ -32,6 +32,7 @@ The platform's design is entirely created by the author and aligns with the **fu
 
 This project has been a tough challenge, but through perseverance, I turned every mistake into a learning opportunity, which ultimately made me a better developer. Each difficulty I faced became a strength and laid the foundation for further growth in my skillset.
 
+<br>
 
 ## Specs for nerds
 
