@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Address, formatEther } from "viem";
 import { useAccount, useReadContract } from "wagmi";
 import { auctionAlphaContract } from "~~/contracts/contractsInfo";
@@ -24,8 +23,6 @@ export const MooveBalance = ({ address, className = "", usdMode }: BalanceProps)
   const nativeCurrencyPrice = useGlobalState(state => state.nativeCurrency.price);
   const isNativeCurrencyPriceFetching = useGlobalState(state => state.nativeCurrency.isFetching);
 
-  const [mooveBalance, setMooveBalance] = useState<bigint | null>(null);
-
   const currentAccount = useAccount();
 
   const { data: userBalance } = useReadContract({
@@ -36,10 +33,6 @@ export const MooveBalance = ({ address, className = "", usdMode }: BalanceProps)
       refetchInterval: 5000,
     },
   });
-
-  useEffect(() => {
-    setMooveBalance(userBalance ?? null);
-  }, [userBalance]);
 
   const {
     data: balance,

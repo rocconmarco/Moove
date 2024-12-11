@@ -13,7 +13,6 @@ import {
   CheckCircleIcon,
   ChevronDownIcon,
   DocumentDuplicateIcon,
-  LinkIcon,
 } from "@heroicons/react/24/outline";
 import { Balance, BlockieAvatar, isENS } from "~~/components/scaffold-eth";
 import { useOutsideClick } from "~~/hooks/scaffold-eth";

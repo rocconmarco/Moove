@@ -11,7 +11,7 @@ interface Bid {
 }
 
 const StyledTable: React.FC<{ auctionId: bigint }> = ({ auctionId }) => {
-  const { data: bidsArray, isLoading, isError } = useReadContract({
+  const { data: bidsArray, isLoading } = useReadContract({
     ...auctionAlphaContract,
     functionName: "getListOfBids",
     args: [auctionId],

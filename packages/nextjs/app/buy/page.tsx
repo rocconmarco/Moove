@@ -2,16 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import styles from "./Buy.module.css";
 import clsx from "clsx";
 import type { NextPage } from "next";
 import { formatEther } from "viem";
 import { useAccount, useBalance, useReadContract, useWriteContract } from "wagmi";
 import { CheckCircleIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
-import NFTImage from "~~/components/NFTImage";
 import NFTName from "~~/components/NFTName";
 import UnsoldNFTImage from "~~/components/UnsoldNFTImage";
-import { auctionAlphaContract, mooveNFTContract } from "~~/contracts/contractsInfo";
+import { auctionAlphaContract } from "~~/contracts/contractsInfo";
 import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
 
 const Buy: NextPage = () => {

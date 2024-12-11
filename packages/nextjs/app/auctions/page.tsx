@@ -30,7 +30,7 @@ const Auctions: NextPage = () => {
 
   const currentAccount = useAccount();
   const { address } = useAccount();
-  const { data: walletBalance, isLoading } = useBalance({
+  const { data: walletBalance } = useBalance({
     address,
   });
 
@@ -234,12 +234,12 @@ const Auctions: NextPage = () => {
   const startingPrice: string = formatEther(auction?.[4] ?? BigInt(0)).toString();
   const startingPriceInUsd: string = (Number(formatEther(auction?.[4] ?? BigInt(0))) * nativeCurrencyPrice).toFixed(2);
   const minimumBidIncrement: string = formatEther(auction?.[5] ?? BigInt(0)).toString();
-  const minimumBidIncrementInEth: number = Number(minimumBidIncrement);
+  const minimumBidIncrementInEth = Number(minimumBidIncrement);
   const minimumBidIncrementInUsd: string = (
     Number(formatEther(auction?.[5] ?? BigInt(0))) * nativeCurrencyPrice
   ).toFixed(2);
   const currentHighestBid: string = formatEther(highestBid ?? BigInt(0)).toString();
-  const currentHighestBidInEth: number = Number(currentHighestBid);
+  const currentHighestBidInEth = Number(currentHighestBid);
   const currentHighestBidInUsd: string = (Number(formatEther(highestBid ?? BigInt(0))) * nativeCurrencyPrice).toFixed(
     2,
   );

@@ -7,7 +7,6 @@ import { formatEther, parseEther } from "viem";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import { auctionAlphaContract } from "~~/contracts/contractsInfo";
-import { useGlobalState } from "~~/services/store/store";
 import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
 
 const Withdraw: NextPage = () => {

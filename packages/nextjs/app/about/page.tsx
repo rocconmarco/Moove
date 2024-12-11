@@ -21,16 +21,16 @@ const About: NextPage = () => {
         <p className="text-base">
           The platform is fully functional, allowing users to bid for a chance to obtain unique NFTs from the MOOVE
           collection. Each auction lasts 30 days, after which the highest bidder wins the NFT. If no bids are placed by
-          the end of an auction, the NFT is marked as "unsold" and becomes available in the "Buy" section at its
+          the end of an auction, the NFT is marked as &quot;unsold&quot; and becomes available in the &quot;Buy&quot; section at its
           starting price.
         </p>
         <p className="text-base">
           Both the auction process and the marketplace are fully managed by smart contracts developed in Solidity and
           deployed on the Sepolia testnet. Users can connect a web3 wallet to interact with the platform and view their
-          NFTs in the "MyNFTs" section.
+          NFTs in the &quot;MyNFTs&quot; section.
         </p>
         <p className="text-base">
-          The platform's design is entirely created by the author and aligns with the futuristic aesthetic commonly
+          The platform&apos;s design is entirely created by the author and aligns with the futuristic aesthetic commonly
           adopted by designers in the web3 space.
         </p>
         <p className="text-base">
