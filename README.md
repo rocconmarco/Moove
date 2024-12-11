@@ -9,7 +9,7 @@
   <p align="center">
     MOOVE is a blockchain-based auction platform and NFT marketplace.
     <br />
-    <a href=""><strong>Repository GitHub »</strong></a>
+    <a href=""><strong>Go to the project »</strong></a>
     <br />
   </p>
 </div>
