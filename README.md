@@ -87,7 +87,7 @@ These checks are also mirrored on the **front end**, adding an **extra layer of 
 
 The **auction process** has been optimized for **gas efficiency** while maintaining the **security** and **transparency** essential for on-chain dApps.  
 - When a user is outbid, their funds are not automatically returned to their web3 wallet.  
-- Instead, the funds are retained on-platform as **MOOVE Balance**, enabling users to place a new bid quickly without incurring duplicate transaction costs.  
+- Instead, the funds are retained on-platform as **MOOVE Balance**, enabling users to place a new bid quickly with all or part of the balance available on-platform.  
 
 If a user decides to exit the auction, they can easily withdraw their funds via the **“Withdraw Funds”** page, accessible through the **wallet dropdown menu**.
 
