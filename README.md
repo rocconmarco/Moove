@@ -1,7 +1,7 @@
 <br />
 <div id="readme-top" align="center">
   <a href="">
-    <img src="/packages/nextjs/public/logo.png/" alt="Moove Logo" width="150" height="30">
+    <img src="/packages/nextjs/public/logo.png/" alt="Moove Logo" width="160" height="30">
   </a>
 
 <h3 align="center">Moove</h3>
