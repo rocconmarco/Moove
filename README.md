@@ -1,80 +1,129 @@
-# 🏗 Scaffold-ETH 2
+<br />
+<div id="readme-top" align="center">
+  <a href="">
+    <img src="/packages/nextjs/public/logo.png/" alt="Moove Logo" width="100" height="30">
+  </a>
 
-<h4 align="center">
-  <a href="https://docs.scaffoldeth.io">Documentation</a> |
-  <a href="https://scaffoldeth.io">Website</a>
-</h4>
+<h3 align="center">Moove</h3>
 
-🧪 An open-source, up-to-date toolkit for building decentralized applications (dapps) on the Ethereum blockchain. It's designed to make it easier for developers to create and deploy smart contracts and build user interfaces that interact with those contracts.
+  <p align="center">
+    MOOVE is a blockchain-based auction platform and NFT marketplace.
+    <br />
+    <a href=""><strong>Repository GitHub »</strong></a>
+    <br />
+  </p>
+</div>
 
-⚙️ Built using NextJS, RainbowKit, Foundry, Wagmi, Viem, and Typescript.
+## About The Project
 
-- ✅ **Contract Hot Reload**: Your frontend auto-adapts to your smart contract as you edit it.
-- 🪝 **[Custom hooks](https://docs.scaffoldeth.io/hooks/)**: Collection of React hooks wrapper around [wagmi](https://wagmi.sh/) to simplify interactions with smart contracts with typescript autocompletion.
-- 🧱 [**Components**](https://docs.scaffoldeth.io/components/): Collection of common web3 components to quickly build your frontend.
-- 🔥 **Burner Wallet & Local Faucet**: Quickly test your application with a burner wallet and local faucet.
-- 🔐 **Integration with Wallet Providers**: Connect to different wallet providers and interact with the Ethereum network.
+**MOOVE** is a blockchain-based auction platform and NFT marketplace created by **Marco Roccon** as part of the final project for the **Master in Blockchain Development** at **start2impact University**.
 
-![Debug Contracts tab](https://github.com/scaffold-eth/scaffold-eth-2/assets/55535804/b237af0c-5027-4849-a5c1-2e31495cccb1)
+The platform is fully functional, allowing users to bid for a chance to obtain unique NFTs from the MOOVE collection.  
+- Each auction lasts **30 days**, after which the highest bidder wins the NFT.  
+- If no bids are placed by the end of an auction, the NFT is marked as **"unsold"** and becomes available in the **"Buy"** section at its starting price.
 
-## Requirements
+Both the auction process and the marketplace are fully managed by **smart contracts** developed in **Solidity** and deployed on the **Sepolia testnet**. Users can connect a web3 wallet to:  
+- Interact with the platform.  
+- View their NFTs in the **"MyNFTs"** section.
 
-Before you begin, you need to install the following tools:
+The platform's design is entirely created by the author and aligns with the **futuristic aesthetic** commonly adopted by designers in the web3 space.
 
-- [Node (>= v18.18)](https://nodejs.org/en/download/)
-- Yarn ([v1](https://classic.yarnpkg.com/en/docs/install/) or [v2+](https://yarnpkg.com/getting-started/install))
-- [Git](https://git-scm.com/downloads)
+**MOOVE** is open to everyone for testing and interaction. The **minting mechanisms** have been successfully implemented and tested, ensuring that anyone has a real chance to win one of the **13 unique NFTs** in the collection.
 
-## Quickstart
-
-To get started with Scaffold-ETH 2, follow the steps below:
-
-1. Install dependencies if it was skipped in CLI:
-
-```
-cd my-dapp-example
-yarn install
-```
-
-2. Run a local network in the first terminal:
-
-```
-yarn chain
-```
-
-This command starts a local Ethereum network using Foundry. The network runs on your local machine and can be used for testing and development. You can customize the network configuration in `packages/foundry/foundry.toml`.
-
-3. On a second terminal, deploy the test contract:
-
-```
-yarn deploy
-```
-
-This command deploys a test smart contract to the local network. The contract is located in `packages/foundry/contracts` and can be modified to suit your needs. The `yarn deploy` command uses the deploy script located in `packages/foundry/script` to deploy the contract to the network. You can also customize the deploy script.
-
-4. On a third terminal, start your NextJS app:
-
-```
-yarn start
-```
-
-Visit your app on: `http://localhost:3000`. You can interact with your smart contract using the `Debug Contracts` page. You can tweak the app config in `packages/nextjs/scaffold.config.ts`.
-
-Run smart contract test with `yarn foundry:test`
-
-- Edit your smart contract `YourContract.sol` in `packages/foundry/contracts`
-- Edit your frontend homepage at `packages/nextjs/app/page.tsx`. For guidance on [routing](https://nextjs.org/docs/app/building-your-application/routing/defining-routes) and configuring [pages/layouts](https://nextjs.org/docs/app/building-your-application/routing/pages-and-layouts) checkout the Next.js documentation.
-- Edit your deployment scripts in `packages/foundry/script`
+This project has been a tough challenge, but through perseverance, I turned every mistake into a learning opportunity, which ultimately made me a better developer. Each difficulty I faced became a strength and laid the foundation for further growth in my skillset.
 
 
-## Documentation
+## Specs for nerds
 
-Visit our [docs](https://docs.scaffoldeth.io) to learn how to start building with Scaffold-ETH 2.
+The project was built using ScaffoldETH-2, a web3 framework that provides the foundational structure for developing and testing dApps.
 
-To know more about its features, check out our [website](https://scaffoldeth.io).
+It leverages Next.js as the primary JavaScript framework for the front end, while Foundry is used as the smart contract development framework for testing and deploying on-chain.
 
-## Contributing to Scaffold-ETH 2
 
-We welcome contributions to Scaffold-ETH 2!
+## Smart Contracts
 
-Please see [CONTRIBUTING.MD](https://github.com/scaffold-eth/scaffold-eth-2/blob/main/CONTRIBUTING.md) for more information and guidelines for contributing to Scaffold-ETH 2.
+At its core, **MOOVE** is entirely powered by two smart contracts deployed on the Sepolia testnet: **MooveNFT** and **AuctionAlpha**.
+
+- MooveNFT: **0x11eAF27a2Ec15FdE8E9c3f5208c7F71dF1C5c111**
+- AuctionAlpha: **0x3AA8c544CBFb5f562688fb6A746D174Ad2e99ABA**
+
+### 1. MooveNFT
+This contract manages the minting process for the NFT collection.  
+- It adheres to the **ERC721 standard**, inheriting its implementation from **OpenZeppelin**.  
+- Beyond the standard, it includes functionality for managing **minting authorizations**, which are granted exclusively by the contract owner.  
+- Ideally, only **AuctionAlpha** should hold minting rights for the NFTs.  
+
+### 2. AuctionAlpha
+This contract oversees the entire auction process and serves as the foundation for the marketplace section.  
+- It includes **robust checks** to ensure that auctions run as expected.  
+- The owner is granted **limited rights**, specifically the ability to adjust:  
+  - The starting price.  
+  - The minimum bid increment for upcoming auctions.  
+- These measures are designed to mitigate the impact of **ETH volatility**, which could otherwise inflate the minimum bid in dollar terms, potentially discouraging user participation.
+
+The smart contracts follow **NatSpec guidelines**, ensuring that the purpose behind each line of code is **clear** and **well-documented**.
+
+## Front end
+
+The front-end design reflects contemporary trends in the web3 space, featuring a **futuristic aesthetic** and a **seamless user experience**. A **smooth landing page** enhances the project's credibility.
+
+Wallet connection is natively managed by **RainbowKit**, providing users with insights into:  
+- Their **wallet balance**.  
+- Their **on-platform balance**, namely **“MOOVE Balance.”**  
+
+These two pieces of information allow users to quickly view their total available funds.
+
+All bids for the current auction are displayed in the **“Bid History”** table, which provides users with:  
+- The **address** of the bidder (shortened for privacy).  
+- The **bid amount**.  
+- The **exact timestamp** of the bid.
+
+To prevent unintended behavior, **custom errors** have been implemented within the smart contracts.  
+These checks are also mirrored on the **front end**, adding an **extra layer of security**.  
+- Buttons for certain actions are **disabled** if the required conditions are not met, ensuring a seamless and error-free user experience.
+
+## Gas efficiency
+
+The **auction process** has been optimized for **gas efficiency** while maintaining the **security** and **transparency** essential for on-chain dApps.  
+- When a user is outbid, their funds are not automatically returned to their web3 wallet.  
+- Instead, the funds are retained on-platform as **MOOVE Balance**, enabling users to place a new bid quickly without incurring duplicate transaction costs.  
+
+If a user decides to exit the auction, they can easily withdraw their funds via the **“Withdraw Funds”** page, accessible through the **wallet dropdown menu**.
+
+## Automation
+
+The starting and closing steps of the auction process are automated via **Chainlink Automation**.  
+As a result:  
+- The `startAuction` and `closeAuction` functions are designed to be **exclusively callable** by the Forwarder address provided by Chainlink.  
+- This ensures that auctions can only be closed when specific conditions are met, enabling the seamless transition to the next auction.
+
+## After the minting
+
+Once a user successfully obtains an NFT—either by winning an auction or purchasing an unsold NFT—they can verify the minting of their NFT:  
+- In the **“MyNFTs”** page.  
+- In their **web3 wallet**.  
+
+Users can also transfer ownership of their NFTs directly from their wallets.  
+To facilitate this, the **MooveNFT** contract extends the ERC721 `transferFrom` function by implementing an `_updateOwnership` internal function, ensuring the **“MyNFTs”** page reflects the correct ownership.
+
+## Further development
+
+If you discover a bug or have questions, feel free to reach out via **Telegram** or through the **contact section** of my portfolio website.
+
+<br>
+
+## Contacts
+
+**Marco Roccon - Digital Innovation & Development**<br>
+Portfolio website: https://rocconmarco.github.io/<br>
+Linkedin: https://www.linkedin.com/in/marcoroccon/<br>
+Telegram: https://t.me/marcoroccon<br>
+GitHub: https://github.com/rocconmarco
+
+Project Link: 
+
+<br>
+
+## Copyright
+
+© 2024 Marco Roccon. All rights reserved.
