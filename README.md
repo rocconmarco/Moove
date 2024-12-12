@@ -9,7 +9,7 @@
   <p align="center">
     MOOVE is a blockchain-based auction platform and NFT marketplace.
     <br />
-    <a href=""><strong>Link to the project »</strong></a>
+    <a href="https://moove-bay.vercel.app/"><strong>Visit the website »</strong></a>
     <br />
   </p>
 </div>
@@ -38,7 +38,7 @@ This project has been a tough challenge, but through perseverance, I turned ever
 
 The project was built using ScaffoldETH-2, a web3 framework that provides the foundational structure for developing and testing dApps.
 
-It leverages Next.js as the primary JavaScript framework for the front end, while Foundry is used as the smart contract development framework for testing and deploying on-chain.
+It leverages Next.js as the JavaScript framework for the front end, while Foundry is used as the smart contract development framework for testing and deploying smart contracts on-chain.
 
 
 ## Smart Contracts
@@ -55,7 +55,7 @@ This contract manages the minting process for the NFT collection.
 - Ideally, only **AuctionAlpha** should hold minting rights for the NFTs.  
 
 ### 2. AuctionAlpha
-This contract oversees the entire auction process and serves as the foundation for the marketplace section.  
+This contract manages the entire auction process and serves as the foundation for the marketplace section.  
 - It includes **robust checks** to ensure that auctions run as expected.  
 - The owner is granted **limited rights**, specifically the ability to adjust:  
   - The starting price.  
@@ -96,7 +96,7 @@ If a user decides to exit the auction, they can easily withdraw their funds via 
 The starting and closing steps of the auction process are automated via **Chainlink Automation**.  
 As a result:  
 - The `startAuction` and `closeAuction` functions are designed to be **exclusively callable** by the Forwarder address provided by Chainlink.  
-- This ensures that auctions can only be closed when specific conditions are met, enabling the seamless transition to the next auction.
+- This ensures that auctions can only be closed when specific conditions are met, enabling a smooth transition to the next auction.
 
 ## After the minting
 
@@ -121,7 +121,7 @@ Linkedin: https://www.linkedin.com/in/marcoroccon/<br>
 Telegram: https://t.me/marcoroccon<br>
 GitHub: https://github.com/rocconmarco
 
-Project Link: 
+Project Link: https://moove-bay.vercel.app/
 
 <br>
 
