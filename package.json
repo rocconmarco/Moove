@@ -1,5 +1,5 @@
 {
-  "name": "se-2",
+  "name": "moove",
   "version": "0.0.1",
   "private": true,
   "workspaces": {
@@ -8,36 +8,34 @@
     ]
   },
   "scripts": {
-    "account": "yarn workspace @se-2/foundry account",
-    "account:generate": "yarn workspace @se-2/foundry account:generate",
-    "account:import": "yarn workspace @se-2/foundry account:import",
-    "chain": "yarn workspace @se-2/foundry chain",
-    "compile": "yarn workspace @se-2/foundry compile",
-    "deploy": "yarn workspace @se-2/foundry deploy",
-    "deploy:verify": "yarn workspace @se-2/foundry deploy:verify",
-    "flatten": "yarn workspace @se-2/foundry flatten",
-    "fork": "yarn workspace @se-2/foundry fork",
+    "account": "yarn workspace moove/foundry account",
+    "account:generate": "yarn workspace moove/foundry account:generate",
+    "account:import": "yarn workspace moove/foundry account:import",
+    "chain": "yarn workspace moove/foundry chain",
+    "compile": "yarn workspace moove/foundry compile",
+    "deploy": "yarn workspace moove/foundry deploy",
+    "deploy:verify": "yarn workspace moove/foundry deploy:verify",
+    "flatten": "yarn workspace moove/foundry flatten",
+    "fork": "yarn workspace moove/foundry fork",
     "format": "yarn next:format && yarn foundry:format",
-    "foundry:format": "yarn workspace @se-2/foundry format",
-    "foundry:lint": "yarn workspace @se-2/foundry lint",
-    "foundry:test": "yarn workspace @se-2/foundry test",
+    "foundry:format": "yarn workspace moove/foundry format",
+    "foundry:lint": "yarn workspace moove/foundry lint",
+    "foundry:test": "yarn workspace moove/foundry test",
     "generate": "yarn account:generate",
     "postinstall": "husky install",
-    "next:build": "yarn workspace @se-2/nextjs build",
-    "next:check-types": "yarn workspace @se-2/nextjs check-types",
-    "next:format": "yarn workspace @se-2/nextjs format",
-    "next:lint": "yarn workspace @se-2/nextjs lint",
-    "next:serve": "yarn workspace @se-2/nextjs serve",
+    "next:build": "yarn workspace moove/nextjs build",
+    "next:check-types": "yarn workspace moove/nextjs check-types",
+    "next:format": "yarn workspace moove/nextjs format",
+    "next:lint": "yarn workspace moove/nextjs lint",
+    "next:serve": "yarn workspace moove/nextjs serve",
     "precommit": "lint-staged",
-    "start": "yarn workspace @se-2/nextjs dev",
+    "start": "yarn workspace moove/nextjs dev",
     "test": "yarn foundry:test",
-    "vercel": "yarn workspace @se-2/nextjs vercel",
-    "vercel:yolo": "yarn workspace @se-2/nextjs vercel:yolo",
-    "verify": "yarn workspace @se-2/foundry verify"
+    "vercel": "yarn workspace moove/nextjs vercel",
+    "vercel:yolo": "yarn workspace moove/nextjs vercel:yolo",
+    "verify": "yarn workspace moove/foundry verify"
   },
   "devDependencies": {
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
     "husky": "~8.0.3",
     "lint-staged": "~13.2.2"
   },
@@ -46,10 +44,6 @@
     "node": ">=18.18.0"
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.62.7",
-    "@typescript-eslint/parser": "^8.18.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
     "react-icons": "^5.3.0",
     "styled-components": "^6.1.13"
   }
