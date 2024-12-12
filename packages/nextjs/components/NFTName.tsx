@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const NFTName = ({ tokenURI }: { tokenURI: string }) => {
   const [nftName, setNftName] = useState<string>("Loading...");
@@ -15,22 +15,22 @@ const NFTName = ({ tokenURI }: { tokenURI: string }) => {
       try {
         const cidAndPath = tokenURI.replace("ipfs://", "");
         const [cid, ...path] = cidAndPath.split("/");
-        
+
         if (!cid) {
           setNftName("Invalid URI format");
           return;
         }
 
         const url = `https://${cid}.ipfs.w3s.link/${path.join("/")}`;
-        
+
         const response = await fetch(url);
         if (!response.ok) {
           setNftName(`Error: ${response.status}`);
           return;
         }
-        
+
         const text = await response.text();
-        
+
         let metadata;
         try {
           metadata = JSON.parse(text);
@@ -39,15 +39,13 @@ const NFTName = ({ tokenURI }: { tokenURI: string }) => {
           return;
         }
 
-        
-        if (!metadata || typeof metadata !== 'object') {
+        if (!metadata || typeof metadata !== "object") {
           setNftName("Invalid metadata structure");
           return;
         }
 
         const vehicleAttribute = metadata.attributes?.find(
-          (attr: { trait_type: string; value: string }) => 
-            attr.trait_type === "Vehicle"
+          (attr: { trait_type: string; value: string }) => attr.trait_type === "Vehicle",
         );
 
         if (vehicleAttribute?.value) {
@@ -69,11 +67,7 @@ const NFTName = ({ tokenURI }: { tokenURI: string }) => {
     return () => clearTimeout(timeoutId);
   }, [tokenURI]);
 
-  return (
-    <span className={nftName === "Loading..." ? "animate-pulse" : ""}>
-      {nftName}
-    </span>
-  );
+  return <span className={nftName === "Loading..." ? "animate-pulse" : ""}>{nftName}</span>;
 };
 
 export default NFTName;

@@ -6,7 +6,6 @@ import { CardsFan } from "~~/components/CardsFan";
 import { ImageSlider } from "~~/components/ImageSlider";
 
 const Home: NextPage = () => {
-
   return (
     <>
       <div className="flex flex-col items-center flex-grow z-10 pt-8">

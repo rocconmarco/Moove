@@ -1,7 +1,6 @@
 import React from "react";
 
 export const Footer = () => {
-
   return (
     <div className="flex justify-center min-h-0 z-20 py-5 px-1 mb-11 lg:mb-0">
       <div className="w-auto">

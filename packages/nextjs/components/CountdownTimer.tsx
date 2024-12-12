@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from "react";
 
 interface TimeLeft {
   days: number;
@@ -20,7 +20,7 @@ const TimeUnit: React.FC<TimeUnitProps> = ({ value, label }) => (
   <div className="flex flex-col items-center">
     <div className="bg-gray-800 rounded-lg w-[60px] h-[60px] md:w-[72px] md:h-[72px] flex items-center justify-center mb-2">
       <span className="text-3xl md:text-4xl font-bold text-white tabular-nums">
-        {value.toString().padStart(2, '0')}
+        {value.toString().padStart(2, "0")}
       </span>
     </div>
     <span className="text-[12px] md:text-sm text-gray-500 uppercase tracking-wider h-5 flex items-center">{label}</span>
@@ -32,19 +32,19 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetDate }) => {
     days: 0,
     hours: 0,
     minutes: 0,
-    seconds: 0
+    seconds: 0,
   });
 
   useEffect(() => {
     const calculateTimeLeft = (): void => {
       const difference = +new Date(targetDate) - +new Date();
-      
+
       if (difference > 0) {
         setTimeLeft({
           days: Math.floor(difference / (1000 * 60 * 60 * 24)),
           hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
           minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60)
+          seconds: Math.floor((difference / 1000) % 60),
         });
       }
     };

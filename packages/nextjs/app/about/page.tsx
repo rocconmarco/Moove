@@ -5,7 +5,6 @@ import styles from "./About.module.css";
 import type { NextPage } from "next";
 
 const About: NextPage = () => {
-
   return (
     <>
       <div className="relative z-10 min-h-screen -mt-[64px] flex flex-col items-center justify-center space-x-10 space-y-4 flex-grow pt-8 px-40">
@@ -21,8 +20,8 @@ const About: NextPage = () => {
         <p className="text-base">
           The platform is fully functional, allowing users to bid for a chance to obtain unique NFTs from the MOOVE
           collection. Each auction lasts 30 days, after which the highest bidder wins the NFT. If no bids are placed by
-          the end of an auction, the NFT is marked as &quot;unsold&quot; and becomes available in the &quot;Buy&quot; section at its
-          starting price.
+          the end of an auction, the NFT is marked as &quot;unsold&quot; and becomes available in the &quot;Buy&quot;
+          section at its starting price.
         </p>
         <p className="text-base">
           Both the auction process and the marketplace are fully managed by smart contracts developed in Solidity and
@@ -45,7 +44,14 @@ const About: NextPage = () => {
         </p>
         <div className="flex flex-col items-center justify-center w-[200px] h-[80px]">
           <p className="text-lg font-bold mt-16">Marco Roccon</p>
-          <Image alt="Marco Roccon signature" className="-mt-6" layout="intrinsic" width={200} height={80} src="/firma.svg" />
+          <Image
+            alt="Marco Roccon signature"
+            className="-mt-6"
+            layout="intrinsic"
+            width={200}
+            height={80}
+            src="/firma.svg"
+          />
         </div>
       </div>
       <div className="relative z-10 min-h-screen mt-14 flex flex-col items-center justify-center space-x-10 space-y-4 flex-grow pt-8 px-40">

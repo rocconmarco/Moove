@@ -17,7 +17,7 @@ export const StarryBackground = () => {
       const container = document.querySelector(`.${styles["bg-stars"]}`);
       if (container) {
         container.appendChild(star);
-        
+
         setTimeout(() => {
           if (star.parentNode === container) {
             star.remove();
@@ -42,7 +42,5 @@ export const StarryBackground = () => {
     };
   }, []);
 
-  return (
-    <div className={`${styles["bg-stars"]} fixed inset-0`}></div>
-  );
+  return <div className={`${styles["bg-stars"]} fixed inset-0`}></div>;
 };

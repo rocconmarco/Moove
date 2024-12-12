@@ -1,23 +1,23 @@
 "use client";
 
+import Link from "next/link";
 import type { NextPage } from "next";
 import { useAccount, useReadContract } from "wagmi";
+import MyNFTImage from "~~/components/MyNFTImage";
+import NFTName from "~~/components/NFTName";
 import { mooveNFTContract } from "~~/contracts/contractsInfo";
 import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
-import Link from "next/link";
-import NFTName from "~~/components/NFTName";
-import MyNFTImage from "~~/components/MyNFTImage";
 
 const MyNFTs: NextPage = () => {
-const baseURI = "ipfs://bafybeiaepnzx772p5dc2vxbdm6xllkevw6uxu27ncx54cvw2kuloovazcm";
+  const baseURI = "ipfs://bafybeiaepnzx772p5dc2vxbdm6xllkevw6uxu27ncx54cvw2kuloovazcm";
 
-const { address } = useAccount();
+  const { address } = useAccount();
 
-const { data: ownedNft } = useReadContract({
-  ...mooveNFTContract,
-  functionName: "getOwnedNFTsArray",
-  args: [address ?? ZERO_ADDRESS]
-})
+  const { data: ownedNft } = useReadContract({
+    ...mooveNFTContract,
+    functionName: "getOwnedNFTsArray",
+    args: [address ?? ZERO_ADDRESS],
+  });
 
   return (
     <>
@@ -28,38 +28,38 @@ const { data: ownedNft } = useReadContract({
             <p className="px-8 text-center">All your NFTs, in one single place.</p>
           </div>
 
-          {!address && 
+          {!address && (
             <div className="flex flex-col items-center justify-center h-[50vh] w-screen">
-            <div className="text-center text-white my-8">Connect your wallet to see your collection</div>
-            <div className="relative inline-flex group">
-              <div
-                className="
+              <div className="text-center text-white my-8">Connect your wallet to see your collection</div>
+              <div className="relative inline-flex group">
+                <div
+                  className="
                       absolute rounded-xl blur-lg z-0 transition-all 
                       opacity-70 -inset-px bg-gradient-to-r 
                      from-darkPurpleAlt via-darkPink to-darkPurpleAlt 
                       group-hover:opacity-100 group-hover:-inset-1 
                       duration-500 animate-tilt
                     "
-              ></div>
+                ></div>
 
-              <Link
-                title="Back to auctions"
-                href="/auctions"
-                className="
+                <Link
+                  title="Back to auctions"
+                  href="/auctions"
+                  className="
                       relative inline-flex items-center justify-center 
                       px-8 py-4 text-lg font-bold text-white 
                       transition-all duration-200 bg-gray-900 
                       font-pj rounded-xl outline-none z-10 
                      active:bg-gray-700 hover:bg-gray-800 hover:scale-105
                     "
-              >
-                Back to auctions
-              </Link>
+                >
+                  Back to auctions
+                </Link>
+              </div>
             </div>
-          </div>
-          }
+          )}
 
-          {(address && ownedNft?.length == 0) ? (
+          {address && ownedNft?.length == 0 ? (
             <div className="flex flex-col items-center justify-center h-[50vh] w-screen">
               <div className="text-center text-white my-8">Your NFT collection is currently empty</div>
               <div className="relative inline-flex group">

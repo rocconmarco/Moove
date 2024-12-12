@@ -24,8 +24,13 @@ export const CardsFan = () => {
   }, []);
 
   return (
-    <div className={`${styles.cards} absolute left-0 right-0 opacity-0 -mt-20 md:-mt-10 pt-24 h-[600px] w-[100vw] flex items-start justify-center overflow-x-hidden overflow-y-hidden`}>
-      <div id="cards-container" className="relative mt-8 w-[161.28px] h-[210px] sm:w-[201.6px] sm:h-[250px] md:w-72 md:h-[342px]">
+    <div
+      className={`${styles.cards} absolute left-0 right-0 opacity-0 -mt-20 md:-mt-10 pt-24 h-[600px] w-[100vw] flex items-start justify-center overflow-x-hidden overflow-y-hidden`}
+    >
+      <div
+        id="cards-container"
+        className="relative mt-8 w-[161.28px] h-[210px] sm:w-[201.6px] sm:h-[250px] md:w-72 md:h-[342px]"
+      >
         {indexesArray.map(index => (
           <div
             key={index}
@@ -43,19 +48,11 @@ export const CardsFan = () => {
                   rotateY(${isVisible ? getYRotation(index) : 0}deg)
                   rotateZ(${isVisible ? getZRotation(index) : 0}deg)
                   translateZ(${12 * index}px)
-                  translateY(${
-                    isVisible
-                      ? hoveredCard === index
-                        ? getYOffset(index) - 100
-                        : getYOffset(index)
-                      : 0
-                  }px)
+                  translateY(${isVisible ? (hoveredCard === index ? getYOffset(index) - 100 : getYOffset(index)) : 0}px)
                 `,
-              boxShadow: hoveredCard === index 
-                ? "0 20px 25px rgba(0,0,0,0.3)" 
-                : "0 0 20px rgba(0,0,0,0.2)",
+              boxShadow: hoveredCard === index ? "0 20px 25px rgba(0,0,0,0.3)" : "0 0 20px rgba(0,0,0,0.2)",
               border: "1px solid rgba(255,255,255,0.2)",
-              zIndex: index,  
+              zIndex: index,
             }}
           >
             <div className="absolute inset-0 border-2 border-white/10 rounded-xl" />

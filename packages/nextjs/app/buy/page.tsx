@@ -78,22 +78,22 @@ const Buy: NextPage = () => {
     setShowErrorMessage(false);
 
     window.location.reload();
-  }
+  };
 
   useEffect(() => {
-    document.body.style.overflow = showSuccessMessage || showErrorMessage ? 'hidden' : 'auto';
+    document.body.style.overflow = showSuccessMessage || showErrorMessage ? "hidden" : "auto";
   }, [showSuccessMessage, showErrorMessage]);
 
   useEffect(() => {
-    if(isSuccess) {
+    if (isSuccess) {
       setShowSuccessMessage(true);
       setShowErrorMessage(false);
     }
-    if(isError) {
+    if (isError) {
       setShowErrorMessage(true);
       setShowSuccessMessage(false);
     }
-  }, [isSuccess, isError])
+  }, [isSuccess, isError]);
 
   return (
     <>
@@ -111,8 +111,10 @@ const Buy: NextPage = () => {
               <div
                 className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 px-6 py-3 rounded-xl shadow-lg z-50 
                   ${
-                  showSuccessMessage ? "bg-gradient-to-t from-green-700 to-black text-white min-w-[90%] sm:min-w-[500px] max-w-[500px]" : "bg-gradient-to-t from-red-900 to-black text-white min-w-[350px] max-w-[350px] sm:min-w-[400px] sm:max-w-[400px]"
-                }`}
+                    showSuccessMessage
+                      ? "bg-gradient-to-t from-green-700 to-black text-white min-w-[90%] sm:min-w-[500px] max-w-[500px]"
+                      : "bg-gradient-to-t from-red-900 to-black text-white min-w-[350px] max-w-[350px] sm:min-w-[400px] sm:max-w-[400px]"
+                  }`}
               >
                 <div className="flex items-center">
                   {showSuccessMessage ? (
@@ -124,13 +126,16 @@ const Buy: NextPage = () => {
                       <p className="text-lg sm:text-xl text-center text-pretty">
                         Congratulations, you are now the proud owner of a unique MOOVE NFT.
                       </p>
-                      <p className="text-lg sm:text-xl text-center text-pretty">Welcome to the future of sustainable mobility.</p>
+                      <p className="text-lg sm:text-xl text-center text-pretty">
+                        Welcome to the future of sustainable mobility.
+                      </p>
                       <div className="flex justify-center gap-4 mt-3 mb-3">
                         <div className="relative inline-flex group">
                           <Link
                             title="Go to My NFTs"
                             href="/mynfts"
-                            className="relative inline-flex items-center justify-center px-8 py-4 text-sm sm:text-lg font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl outline-none z-10 active:bg-gray-700 hover:bg-gray-800 hover:scale-105">
+                            className="relative inline-flex items-center justify-center px-8 py-4 text-sm sm:text-lg font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl outline-none z-10 active:bg-gray-700 hover:bg-gray-800 hover:scale-105"
+                          >
                             Go to My NFTs
                           </Link>
                         </div>
@@ -139,7 +144,7 @@ const Buy: NextPage = () => {
                             title="Close"
                             className="relative inline-flex items-center justify-center px-8 py-4 text-sm sm:text-lg font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl outline-none z-10 active:bg-gray-700 hover:bg-gray-800 hover:scale-105"
                             onClick={handleCloseModal}
-                            >
+                          >
                             Close
                           </button>
                         </div>
@@ -160,7 +165,7 @@ const Buy: NextPage = () => {
                             title="Close"
                             className="relative inline-flex items-center justify-center px-8 py-4 text-sm sm:text-lg font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl outline-none z-10 active:bg-gray-700 hover:bg-gray-800 hover:scale-105"
                             onClick={handleCloseModal}
-                            >
+                          >
                             Close
                           </button>
                         </div>

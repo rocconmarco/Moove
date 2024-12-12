@@ -3,15 +3,15 @@ import { NextPage } from "next";
 import { getMetadata } from "~~/utils/scaffold-eth/getMetadata";
 
 export const metadata = getMetadata({
-    title: "404 - Page Not Found",
-    description: "Get your pass to the future of sustainable mobility."
-})
+  title: "404 - Page Not Found",
+  description: "Get your pass to the future of sustainable mobility.",
+});
 
 const NotFound: NextPage = () => {
   return (
     <div className="relative z-10 min-h-screen -mt-[64px] flex flex-col items-center justify-center flex-grow pt-8">
       <div className="w-[300px] md:w-[390px]">
-        <img alt="MOOVE Logo" src="/logo.png"/>
+        <img alt="MOOVE Logo" src="/logo.png" />
       </div>
       <p className="texl-lg md:text-xl font-bold mb-8">404 - Page Not Found</p>
 
