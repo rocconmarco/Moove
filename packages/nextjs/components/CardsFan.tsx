@@ -74,12 +74,12 @@ export const CardsFan = () => {
             />
             <div className="text-white text-start px-4">
               <div className="flex justify-between items-center h-16">
-                <h3 className="text-base md:text-[20px] font-bold my-5">{getName(index)}</h3>
+                <h3 className="text-base md:text-[20px] font-bold my-5">{getName(index).display}</h3>
                 <img src="/favicon.png" className="h-[40%] sm:h-[55%] md:h-[80%]" alt="favicon" />
               </div>
 
               <div className="sm:w-[170px] sm:h-[170px] md:w-[253px] md:h-[253px]">
-                <img src={`/nft-images/${getName(index)}.jpg`} alt={getName(index)} />
+                <img src={`/nft-images/${getName(index).fileName}.jpg`} alt={getName(index).display} />
               </div>
             </div>
           </div>
@@ -92,8 +92,12 @@ export const CardsFan = () => {
 type PossibleIndexes = 1 | 2 | 3 | 4 | 5;
 
 const getName = (index: PossibleIndexes) => {
-  const names = ["Boat", "Firetruck", "Train", "Jetski", "Hoverboard"];
-  return names[index - 1];
+  const names = ["boat", "firetruck", "train", "jetski", "hoverboard"];
+  const name = names[index - 1];
+  return {
+    display: name.charAt(0).toUpperCase() + name.slice(1),
+    fileName: name
+  } 
 };
 
 const getRotation = (index: PossibleIndexes) => {
