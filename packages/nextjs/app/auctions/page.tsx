@@ -290,7 +290,7 @@ const Auctions: NextPage = () => {
                   <NFTImage tokenURI={tokenURI ?? ""} />
                 </div>
                 <div className="flex flex-col items-center md:items-start justify-between w-[95vw] h-full">
-                  <div className="flex items-start justify-center md:justify-start w-[400px]">
+                  <div className="flex items-start justify-center md:justify-start w-full">
                     <p className="font-bold text-2xl md:text-3xl mb-0">
                       <NFTName tokenURI={tokenURI ?? ""} />
                     </p>
