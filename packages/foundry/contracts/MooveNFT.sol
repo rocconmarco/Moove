@@ -38,31 +38,15 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
   mapping (address => bool) private s_authorizedMinters;
 
   /**
-   * This mapping is useful for fetching all the NFTs owned by a particular user
-   * Once an NFT is minted, its tokenId will be added to the array associated with
-   * the user's address.
-   * @dev This mapping is updated everytime a new NFT is minted, and also when
-   * the transfer function is called
-   */
-  mapping (address => uint256[]) private s_ownedNFTsByUser;
-
-  /**
-   * This mapping keeps track of the array index of a particular NFT when owned by a user
-   * @dev It is useful for avoiding nested for loops when trasferring token and 
-   * @dev updating the uint256 array stored within the s_ownedNFTsByUser mapping
-   */
-  mapping (address => mapping(uint256 => uint256)) private s_arrayIndexByTokenId;
-
-
-  /**
    * @param baseURI the base URI for Moove NFTs' metadata stored in IPFS, the format of the string should be ipfs://<CID>
+   * @param maxSupply total supply of Moove NFTs' collection
    * The ERC721 token is inizialized with the name "MooveNFT" and with the symbol "MOOVE"
    * The owner of the contract is set to be the sender of the deployment transaction
    */
-  constructor(string memory baseURI) ERC721("MooveNFT", "MOOVE") Ownable(msg.sender) {
+  constructor(string memory baseURI, uint256 maxSupply) ERC721("MooveNFT", "MOOVE") Ownable(msg.sender) {
     s_baseURI = baseURI;
     s_tokenCounter = 0;
-    s_maxSupply = 13;
+    s_maxSupply = maxSupply;
   }
 
   /**
@@ -82,8 +66,6 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
     if(s_authorizedMinters[msg.sender]) {
       _mint(to, tokenId);
       s_tokenCounter++;
-      s_ownedNFTsByUser[to].push(tokenId);
-      s_arrayIndexByTokenId[to][tokenId] = s_ownedNFTsByUser[to].length;
       emit NFTMinted(to, tokenId);
     } else {
       revert MooveNFT__MintingNotAuthorized();
@@ -109,21 +91,10 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
     if(s_authorizedMinters[msg.sender]) {
       _safeMint(to, tokenId);
       s_tokenCounter++;
-      s_ownedNFTsByUser[to].push(tokenId);
-      s_arrayIndexByTokenId[to][tokenId] = s_ownedNFTsByUser[to].length - 1;
       emit NFTMinted(to, tokenId);
     } else {
       revert MooveNFT__MintingNotAuthorized();
     }
-  }
-
-  /**
-   * Overriding the transferFrom function from ERC721 standard, in order to update
-   * the mapping that keeps track of all the NFTs owned by a particular user
-   */
-  function transferFrom(address from, address to, uint256 tokenId) public override(ERC721, IERC721) {
-      super.transferFrom(from, to, tokenId);
-      _updateNFTOwnership(from, to, tokenId);
   }
 
   /**
@@ -137,6 +108,7 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
       revert MooveNFT__NotAValidAddress();
     }
     s_authorizedMinters[minter] = true;
+    emit AuthorizedMinterAdded(minter);
   }
 
   /**
@@ -147,6 +119,7 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
    */
   function removeAuthorizedMinter(address minter) public onlyOwner {
     s_authorizedMinters[minter] = false;
+    emit AuthorizedMinterRemoved(minter);
   }
 
   function getMaxSupply() public view returns(uint256) {
@@ -159,40 +132,5 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
 
   function checkIfAuthorizedMinter(address minter) public view returns(bool) {
     return s_authorizedMinters[minter];
-  }
-
-  function getOwnedNFTsArray(address user) public view returns(uint256[] memory) {
-    return s_ownedNFTsByUser[user];
-  }
-
-  /**
-   * This function updates NFT ownership when the user transfers a particular token to another user
-   * @param from address that currently owns the NFT
-   * @param to recipient address
-   * @param tokenId NFT to be transferred
-   * 
-   * @dev it updates the mapping s_ownedNFTsByUser, using the swap and pop technique to
-   * @dev delete the token from the previous owner and push the tokenId to the array
-   * @dev associated with the new owner
-   * 
-   * @dev it also keeps track of the index at which the tokenId is stored
-   * @dev allowing a gas-efficient and constant-time (0(1)) access to the array
-   */
-  function _updateNFTOwnership(address from, address to, uint256 tokenId) internal {
-    uint256 indexToRemove = _getIndexToRemove(from, tokenId);
-    if (indexToRemove == s_ownedNFTsByUser[from].length - 1) {
-      s_ownedNFTsByUser[from].pop();
-    } else {
-      uint256 lastTokenId = s_ownedNFTsByUser[from][s_ownedNFTsByUser[from].length - 1];
-      s_ownedNFTsByUser[from][indexToRemove] = lastTokenId;
-      s_arrayIndexByTokenId[from][lastTokenId] = indexToRemove;
-      s_ownedNFTsByUser[from].pop();
-    }
-    s_ownedNFTsByUser[to].push(tokenId);
-    s_arrayIndexByTokenId[to][tokenId] = s_ownedNFTsByUser[to].length - 1;
-  }
-
-  function _getIndexToRemove(address from, uint256 tokenId) internal view returns(uint256) {
-    return s_arrayIndexByTokenId[from][tokenId];
   }
 }

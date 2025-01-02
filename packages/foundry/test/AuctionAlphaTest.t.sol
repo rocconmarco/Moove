@@ -18,8 +18,10 @@ contract AuctionAlphaTest is Test {
     address public USER2 = makeAddr("user2");
     address public forwarderAddress = makeAddr("forwarder");
 
+    event BidPlaced(address indexed bidder, uint256 indexed auctionId, uint256 indexed bidAmount);
+
     function setUp() public {
-        mooveNFT = new MooveNFT("ipfs://bafybeiaepnzx772p5dc2vxbdm6xllkevw6uxu27ncx54cvw2kuloovazcm");
+        mooveNFT = new MooveNFT("ipfs://bafybeiaepnzx772p5dc2vxbdm6xllkevw6uxu27ncx54cvw2kuloovazcm", 13);
         auctionAlpha = new AuctionAlpha(address(mooveNFT));
 
         auctionAlpha.setForwarderAddress(forwarderAddress);
@@ -85,17 +87,16 @@ contract AuctionAlphaTest is Test {
         uint256 user1Bid = 2000000000000000000;
 
         // Giving the user 10ETH and bidding 2ETH for the current auction
-        hoax(USER1, initialBalance);
+        vm.deal(USER1, initialBalance);
+        vm.startPrank(USER1);
+        
+        vm.expectEmit(true, true, true, false);
+        emit BidPlaced(USER1, auctionAlpha.s_currentAuctionId(), user1Bid);
         auctionAlpha.placeBid{value: user1Bid}();
 
-        uint256 currentAuctionId = auctionAlpha.s_currentAuctionId();
-        AuctionAlpha.Bid[] memory listOfBids = auctionAlpha.getListOfBids(currentAuctionId);
+        vm.stopPrank();
 
         assertEq(auctionAlpha.s_currentHighestBid(), user1Bid);
-        assertEq(listOfBids.length, 1);
-        assertEq(listOfBids[0].bidder, address(USER1));
-        assertEq(listOfBids[0].amount, user1Bid);
-        assertEq(listOfBids[0].timestamp, block.timestamp);
     }
 
     function testSecondBidFromTheSameUser() public {
@@ -207,24 +208,23 @@ contract AuctionAlphaTest is Test {
         uint256 user1Bid = 2000000000000000000;
         uint256 user2Bid = 2500000000000000000;
 
-        hoax(USER1, initialBalance);
+        vm.deal(USER1, initialBalance);
+        vm.deal(USER2, initialBalance);
+
+        vm.startPrank(USER1);
+        vm.expectEmit(true, true, true, false);
+        emit BidPlaced(USER1, auctionAlpha.s_currentAuctionId(), user1Bid);
         auctionAlpha.placeBid{value: user1Bid}();
+        vm.stopPrank();
 
-        hoax(USER2, initialBalance);
+        vm.startPrank(USER2);
+        vm.expectEmit(true, true, true, false);
+        emit BidPlaced(USER2, auctionAlpha.s_currentAuctionId(), user2Bid);
         auctionAlpha.placeBid{value: user2Bid}();
-
-        uint256 currentAuctionId = auctionAlpha.s_currentAuctionId();
-        AuctionAlpha.Bid[] memory listOfBids = auctionAlpha.getListOfBids(currentAuctionId);
+        vm.stopPrank();
 
         assertEq(auctionAlpha.s_currentHighestBid(), user2Bid);
         assertEq(auctionAlpha.s_currentWinner(), address(USER2));
-        assertEq(listOfBids.length, 2);
-        assertEq(listOfBids[0].bidder, address(USER1));
-        assertEq(listOfBids[1].bidder, address(USER2));
-        assertEq(listOfBids[0].amount, user1Bid);
-        assertEq(listOfBids[1].amount, user2Bid);
-        assertEq(listOfBids[0].timestamp, block.timestamp);
-        assertEq(listOfBids[1].timestamp, block.timestamp);
     }
 
     function testPlaceBidNonPayable() public {
@@ -462,13 +462,10 @@ contract AuctionAlphaTest is Test {
 
         AuctionAlpha.Auction memory auctionAfterClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
         uint256 unsoldNFTPrice = auctionAlpha.getUnsoldNFTPrice(auctionAfterClosing.nftId);
-        uint256 unsoldNFTArrayIndex = auctionAlpha.getArrayIndexOfUnsoldNFT(auctionAfterClosing.nftId);
         bool unsoldNFTIsListed = auctionAlpha.getIsTokenListed(auctionAfterClosing.nftId);
-
 
         assertEq(auctionAfterClosing.isOpen, false);
         assertEq(unsoldNFTPrice, auctionAfterClosing.startingPrice);
-        assertEq(unsoldNFTArrayIndex, 0);
         assertEq(unsoldNFTIsListed, true);
     }
 
@@ -776,7 +773,6 @@ contract AuctionAlphaTest is Test {
         bool unsoldNFTIsListed = auctionAlpha.getIsTokenListed(auctionAfterClosing.nftId);
 
         assertEq(unsoldNFTIsListed, false);
-        assertEq(auctionAlpha.getUnsoldNFTsArrayLength(), 0);
     }
 
     function testMultipleUnsoldNFTs() public {
@@ -801,7 +797,8 @@ contract AuctionAlphaTest is Test {
         vm.prank(forwarderAddress);
         auctionAlpha.closeAuction();
 
-        assertEq(auctionAlpha.getUnsoldNFTsArrayLength(), 2);
+        assertEq(auctionAlpha.getIsTokenListed(firstAuction.nftId), true);
+        assertEq(auctionAlpha.getIsTokenListed(secondAuction.nftId), true);
     }
 
     function testBuyingMultipleUnsoldNFTs() public {
@@ -830,13 +827,14 @@ contract AuctionAlphaTest is Test {
         uint256 tokenPrice = auctionAlpha.s_startingPrice();
 
         hoax(USER1, initialBalance);
-        auctionAlpha.buyUnsoldNFT{value: tokenPrice}(1);
+        auctionAlpha.buyUnsoldNFT{value: tokenPrice}(firstAuction.nftId);
 
         vm.prank(USER1);
-        auctionAlpha.buyUnsoldNFT{value: tokenPrice}(2);
+        auctionAlpha.buyUnsoldNFT{value: tokenPrice}(secondAuction.nftId);
 
         assertEq(mooveNFT.balanceOf(address(USER1)), 2);
-        assertEq(auctionAlpha.getUnsoldNFTsArrayLength(), 0);
+        assertEq(auctionAlpha.getIsTokenListed(firstAuction.nftId), false);
+        assertEq(auctionAlpha.getIsTokenListed(secondAuction.nftId), false);
     }
 
     function testBuyingAlreadySoldUnsoldNFTs() public {
@@ -951,67 +949,5 @@ contract AuctionAlphaTest is Test {
 
         vm.prank(USER1);
         auctionAlpha.setMinimumBidIncrement(newMinimumBidIncrement);
-    }
-
-    //////////////////////////////////////////////////
-    ///////////////// OTHER TESTS ////////////////////
-    //////////////////////////////////////////////////
-
-    /**
-     * This test is a combination between testCloseAuction from AuctionAlphaTest and 
-     * testUpdateOwnedNFTArrayWhenTransferring from MooveNFTTest. It is aimed at checking
-     * the correct update of s_ownedNFTsByUser, a mapping that keeps track of the NFT ownership
-     * when minting a new NFT and when transferring the token between users
-     */
-    function testMappingUpdateWhenTransferringToken() public {
-        // The first part is the same as testCloseAuction
-        vm.prank(forwarderAddress);
-        auctionAlpha.startAuction();
-
-        mooveNFT.addAuthorizedMinter(address(auctionAlpha));
-
-        uint256 initialBalance = 10000000000000000000;
-        uint256 user1Bid = 2000000000000000000;
-
-        hoax(USER1, initialBalance);
-        auctionAlpha.placeBid{value: user1Bid}();
-
-        uint256 currentAuctionId = auctionAlpha.s_currentAuctionId();
-        AuctionAlpha.Auction memory auctionBeforeClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
-
-        vm.warp(auctionBeforeClosing.openingTimestamp + 30 days);
-        vm.prank(forwarderAddress);
-        auctionAlpha.closeAuction();
-
-        AuctionAlpha.Auction memory auctionAfterClosing = auctionAlpha.getAuctionById(currentAuctionId - 1);
-
-        assertEq(auctionAfterClosing.isOpen, false);
-        assertEq(mooveNFT.balanceOf(address(USER1)), 1);
-        // End of the testCloseAuction part
-
-        // The following part is the same as testUpdateOwnedNFTArrayWhenTransferring
-        uint256[] memory user1OwnedNFTsArrayBeforeTransfer = mooveNFT.getOwnedNFTsArray(USER1);
-        uint256[] memory user2OwnedNFTsArrayBeforeTransfer = mooveNFT.getOwnedNFTsArray(USER2);
-
-        assertEq(user2OwnedNFTsArrayBeforeTransfer.length, 0);
-        assertEq(user1OwnedNFTsArrayBeforeTransfer.length, 1);
-        assertEq(user1OwnedNFTsArrayBeforeTransfer[0], 1);
-
-        assertEq(mooveNFT.balanceOf(USER1), 1);
-        assertEq(mooveNFT.balanceOf(USER2), 0);
-
-        vm.prank(USER1);
-        mooveNFT.safeTransferFrom(USER1, USER2, 1);
-        
-        uint256[] memory user1OwnedNFTsArrayAfterTransfer = mooveNFT.getOwnedNFTsArray(USER1);
-        uint256[] memory user2OwnedNFTsArrayAfterTransfer = mooveNFT.getOwnedNFTsArray(USER2);
-
-        assertEq(user1OwnedNFTsArrayAfterTransfer.length, 0);
-        assertEq(user2OwnedNFTsArrayAfterTransfer.length, 1);
-        assertEq(user2OwnedNFTsArrayAfterTransfer[0], 1);
-        // End of the testUpdateOwnedNFTArrayWhenTransferring part
-
-        assertEq(mooveNFT.balanceOf(USER1), 0);
-        assertEq(mooveNFT.balanceOf(USER2), 1);
     }
 }

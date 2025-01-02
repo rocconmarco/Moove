@@ -10,7 +10,7 @@ contract DeployMooveNFT is Script {
   function run() external returns(MooveNFT) {
     string memory baseURI = "ipfs://bafybeiaepnzx772p5dc2vxbdm6xllkevw6uxu27ncx54cvw2kuloovazcm";
     vm.startBroadcast();
-    MooveNFT mooveNFT = new MooveNFT(baseURI);
+    MooveNFT mooveNFT = new MooveNFT(baseURI, 13);
     vm.stopBroadcast();
 
     return mooveNFT;

@@ -38,7 +38,6 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
   error AuctionAlpha__NotEnoughFundsAvailableOnPlatform();
   error AuctionAlpha__NoNeedToSendEth();
 
-
   struct Auction {
     uint256 auctionId;
     uint256 nftId;
@@ -50,17 +49,6 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
     address winner;
   }
 
-  struct UnsoldNFT {
-    uint256 tokenId;
-    uint256 sellingPrice;
-  }
-
-  struct Bid {
-    address bidder;
-    uint256 amount;
-    uint256 timestamp;
-  }
-
   /**
    * Interface that allows AuctionAlpha to access the NFT contract
    * Only the essential function for minting (mint, safeMint) and for checking
@@ -70,12 +58,6 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
 
   /// Mapping that keeps track of the highest bid for every bidder in all the auctions
   mapping(uint256 auctionId => mapping(address bidder => uint256 highestBid)) public s_listOfHighestBidPerUser;
-
-  /**
-   * Mapping that keeps track of every single bid for every auction held
-   * Used for retrieving the history of bids for a particular auction
-   */
-  mapping(uint256 auctionId => Bid[] listOfBids) public s_bidHistory;
 
   /**
    * Mapping that is updated every time a user gets outbidded by another user
@@ -108,9 +90,6 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
    */
   mapping(uint256 tokenId => uint256 sellingPrice) s_unsoldNFTsSellingPrice;
 
-  /// List of all the unsold NFTs to be fecthed from the front end
-  UnsoldNFT[] public s_listOfUnsoldNFTs;
-
   /**
    * It checks if the unsold NFT is for sale or not
    * The check has to be done via a boolean because uint256 values in mappings are inizialized
@@ -118,12 +97,6 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
    * is set to 0
    */
   mapping(uint256 tokenId => bool listed) private s_isTokenListed;
-
-  /**
-   * Helper mapping to track the array index of the unsold NFTs
-   * to easily remove items from the array when an unsold NFT has been sold
-   */
-  mapping(uint256 tokenId => uint256 arrayIndex) private s_tokenIdToArrayIndexUnsoldNFTs;
 
   /**
    * Record of all the auctions
@@ -267,17 +240,10 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
       s_withdrawableAmountPerBidder[s_currentWinner] += s_currentHighestBid;
     }
 
-    // Updating all the state variables and pushing a new Bid element in the array stored inside the bidHistory mapping
+    // Updating all the state variables
     s_listOfHighestBidPerUser[s_currentAuctionId][msg.sender] = actualBidAmount;
     s_currentHighestBid = actualBidAmount;
     s_currentWinner = msg.sender;
-    s_bidHistory[s_currentAuctionId].push(
-      Bid({
-        bidder: msg.sender,
-        amount: actualBidAmount,
-        timestamp: block.timestamp
-      })
-    );
 
     // Resetting the withdrawable amount for the sender of the transaction
     // The user must use all of its withdrawable amount, as well as additional funds,
@@ -286,6 +252,13 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
 
     emit BidPlaced(msg.sender, s_currentAuctionId, actualBidAmount);
   }
+
+  /**
+   * @param bid total amount the user wants to bid
+   * This function is called when the user wants to place a bid
+   * and its withdrawable amount is sufficient to cover the expense
+   * In this case there is no need to call a payable function
+   */
 
   function placeBidNonPayable(uint256 bid) public {
     if (s_currentAuctionId == 0) {
@@ -322,17 +295,10 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
       s_withdrawableAmountPerBidder[s_currentWinner] += s_currentHighestBid;
     }
 
-    // Updating all the state variables and pushing a new Bid element in the array stored inside the bidHistory mapping
+    // Updating all the state variables
     s_listOfHighestBidPerUser[s_currentAuctionId][msg.sender] = bid;
     s_currentHighestBid = bid;
     s_currentWinner = msg.sender;
-    s_bidHistory[s_currentAuctionId].push(
-      Bid({
-        bidder: msg.sender,
-        amount: bid,
-        timestamp: block.timestamp
-      })
-    );
     
     // Deducting the bid amount from the withdrawable amount of the user
     s_withdrawableAmountPerBidder[msg.sender]-= bid;
@@ -341,12 +307,12 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
   }
 
   /**
-   * @param withdrawAmount amount to be withdrawed by the sender
+   * @param withdrawAmount amount to be withdrawn by the sender
    * It must be greater than zero, and less than or equal to the total withdrawable amount
    * registered in the related mapping for the sender
    *
    * This function can be called only when the user has been outbidded by another user,
-   * and, as a result, as some funds in the withdrawableAmountPerBidder mapping.
+   * and, as a result, has some funds in the withdrawableAmountPerBidder mapping.
    * The user can decide to withdraw all (or part of) the funds or to add other funds and outbid the current winner
    */
   function withdrawBid(uint256 withdrawAmount) public nonReentrant {
@@ -424,9 +390,8 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
    * it will be minted to the winner of the auction.
    * Otherwise, the function will check if the winner is still set to address 0,
    * which will mean that no valid bids has been received during the period of the auction
-   * This way, a new UnsoldNFT instance will be created and pushed to the list of unsold NFTs
-   * @notice the selling price of the unsold NFT will equal
-   * @notice the starting price set by the owner when starting the auction
+   * It will then be marked as listed in the s_isTokenListed mapping
+   * @notice the selling price of the unsold NFT will equal the starting price set by the owner when starting the auction
    */
   function closeAuction() public onlyForwarder {
     if (block.timestamp < s_auctions[s_currentAuctionId - 1].closingTimestamp) {
@@ -443,17 +408,9 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
     emit AuctionClosed(s_currentAuctionId, block.timestamp);
 
     if (s_auctions[s_currentAuctionId - 1].winner == address(0)) {
-      UnsoldNFT memory newUnsoldNFT = UnsoldNFT({
-        tokenId: s_currentNftId,
-        sellingPrice: s_auctions[s_currentAuctionId - 1].startingPrice
-      });
       s_isTokenListed[s_currentNftId] = true;
-      s_listOfUnsoldNFTs.push(newUnsoldNFT);
-      s_tokenIdToArrayIndexUnsoldNFTs[s_currentNftId] =
-        s_listOfUnsoldNFTs.length - 1;
-      s_unsoldNFTsSellingPrice[s_currentNftId] =
-        s_auctions[s_currentAuctionId - 1].startingPrice;
-      emit UnsoldNFTListed(s_currentNftId);
+      s_unsoldNFTsSellingPrice[s_currentNftId] = s_auctions[s_currentAuctionId - 1].startingPrice;
+      emit UnsoldNFTListed(s_currentNftId, s_auctions[s_currentAuctionId - 1].startingPrice);
     } else {
       i_nftContract.safeMint(
         s_auctions[s_currentAuctionId - 1].winner, s_currentNftId
@@ -494,18 +451,8 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
     // to purchase the intended unsold NFT
     s_withdrawableAmountPerBidder[msg.sender] = 0;
 
-    // Applying the swap & pop tecnique to delete the purchased NFT from the list of unsold NFTs
-    // ATTENTION: the order of the array will be changed
-    uint256 indexToRemove = _getArrayIndexOfUnsoldNFT(tokenId);
-    if (indexToRemove == s_listOfUnsoldNFTs.length - 1) {
-      s_listOfUnsoldNFTs.pop();
-    } else {
-      UnsoldNFT memory lastUnsoldNFT = s_listOfUnsoldNFTs[s_listOfUnsoldNFTs.length - 1];
-      s_listOfUnsoldNFTs[indexToRemove] = lastUnsoldNFT;
-      s_tokenIdToArrayIndexUnsoldNFTs[lastUnsoldNFT.tokenId] = indexToRemove;
-      s_listOfUnsoldNFTs.pop();
-    }
     i_nftContract.safeMint(msg.sender, tokenId);
+    emit UnsoldNFTDelisted(tokenId);
   }
 
   /**
@@ -532,18 +479,8 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
     // Deducting the unsold NFT price from the withdrawable amount of the user
     s_withdrawableAmountPerBidder[msg.sender] -= unsoldNFTPrice;
 
-    // Applying the swap & pop tecnique to delete the purchased NFT from the list of unsold NFTs
-    // ATTENTION: the order of the array will be changed
-    uint256 indexToRemove = _getArrayIndexOfUnsoldNFT(tokenId);
-    if (indexToRemove == s_listOfUnsoldNFTs.length - 1) {
-      s_listOfUnsoldNFTs.pop();
-    } else {
-      UnsoldNFT memory lastUnsoldNFT = s_listOfUnsoldNFTs[s_listOfUnsoldNFTs.length - 1];
-      s_listOfUnsoldNFTs[indexToRemove] = lastUnsoldNFT;
-      s_tokenIdToArrayIndexUnsoldNFTs[lastUnsoldNFT.tokenId] = indexToRemove;
-      s_listOfUnsoldNFTs.pop();
-    }
     i_nftContract.safeMint(msg.sender, tokenId);
+    emit UnsoldNFTDelisted(tokenId);
   }
 
   /**
@@ -583,16 +520,8 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
     return !s_auctions[s_currentAuctionId - 1].isOpen;
   }
 
-  function _getArrayIndexOfUnsoldNFT(uint256 tokenId) internal view returns (uint256) {
-    return s_tokenIdToArrayIndexUnsoldNFTs[tokenId];
-  }
-
   function getAuctionById(uint256 auctionId) public view returns (Auction memory) {
     return s_auctions[auctionId];
-  }
-
-  function getListOfBids(uint256 auctionId) public view returns (Bid[] memory) {
-    return s_bidHistory[auctionId];
   }
 
   function getWithdrawableAmountByBidderAddress(address bidder) public view returns (uint256) {
@@ -603,19 +532,7 @@ contract AuctionAlpha is IAuctionAlpha, Ownable, ReentrancyGuard, AutomationComp
     return s_unsoldNFTsSellingPrice[tokenId];
   }
 
-  function getArrayIndexOfUnsoldNFT(uint256 tokenId) public view returns (uint256) {
-    return s_tokenIdToArrayIndexUnsoldNFTs[tokenId];
-  }
-
   function getIsTokenListed(uint256 tokenId) public view returns (bool) {
     return s_isTokenListed[tokenId];
-  }
-
-  function getUnsoldNFTsArrayLength() public view returns (uint256) {
-    return s_listOfUnsoldNFTs.length;
-  }
-
-  function getUnsoldNFTsArray() public view returns (UnsoldNFT[] memory) {
-    return s_listOfUnsoldNFTs;
   }
 }

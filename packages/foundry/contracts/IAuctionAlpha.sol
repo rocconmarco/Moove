@@ -8,9 +8,10 @@ pragma solidity ^0.8.0;
 interface IAuctionAlpha {
     event AuctionStarted(uint256 indexed auctionId, uint256 indexed openingTimestamp);
     event AuctionClosed(uint256 indexed auctionId, uint256 indexed actualClosingTimestamp);
-    event BidPlaced(address indexed bidder, uint256 indexed auctionId, uint256 bidAmount);
+    event BidPlaced(address indexed bidder, uint256 indexed auctionId, uint256 indexed bidAmount);
     event WithdrawSuccess(address indexed bidder, uint256 withdrawnedAmount);
-    event UnsoldNFTListed(uint256 indexed tokenId);
+    event UnsoldNFTListed(uint256 indexed tokenId, uint256 indexed price);
+    event UnsoldNFTDelisted(uint256 indexed tokenId);
 
     function placeBid() external payable;
 
