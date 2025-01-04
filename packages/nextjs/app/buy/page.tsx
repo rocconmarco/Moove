@@ -11,21 +11,32 @@ import NFTName from "~~/components/NFTName";
 import UnsoldNFTImage from "~~/components/UnsoldNFTImage";
 import { auctionAlphaContract } from "~~/contracts/contractsInfo";
 import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
+import { useQuery } from "@apollo/client";
+import { GET_UNSOLD_NFTS } from "~~/utils/queries/auctionAlpha";
+import { auctionAlphaClient } from "~~/utils/client/apollo-clients";
+
+interface UnsoldNFT {
+  id: string;
+  tokenId: bigint;
+  price: bigint;
+  blockNumber: bigint;
+  blockTimestamp: bigint;
+  transactionHash: string;
+}
+
+interface DelistedNFT {
+  id: string;
+  tokenId: bigint;
+  blockNumber: bigint;
+  blockTimestamp: bigint;
+  transactionHash: string;
+}
 
 const Buy: NextPage = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
   const [showErrorMessage, setShowErrorMessage] = useState<boolean>(false);
   const baseURI = "ipfs://bafybeiaepnzx772p5dc2vxbdm6xllkevw6uxu27ncx54cvw2kuloovazcm";
 
-  const { data: unsoldNFTArray } = useReadContract({
-    ...auctionAlphaContract,
-    functionName: "getUnsoldNFTsArray",
-    query: {
-      refetchInterval: 5000,
-    },
-  });
-
-  const currentAccount = useAccount();
   const { address } = useAccount();
   const { data: walletBalance } = useBalance({
     address,
@@ -34,7 +45,7 @@ const Buy: NextPage = () => {
   const { data: userBalance } = useReadContract({
     ...auctionAlphaContract,
     functionName: "s_withdrawableAmountPerBidder",
-    args: [currentAccount.address ?? ZERO_ADDRESS],
+    args: [address ?? ZERO_ADDRESS],
     query: {
       refetchInterval: 5000,
     },
@@ -42,7 +53,7 @@ const Buy: NextPage = () => {
 
   const availableFunds = (walletBalance?.value ?? 0n) + (userBalance ?? 0n);
 
-  const { writeContract, isSuccess, isError, error } = useWriteContract();
+  const { writeContract, isSuccess, isError, error: writeContractError } = useWriteContract();
 
   const handleBuy = (amount: bigint, tokenId: bigint) => {
     writeContract({
@@ -94,6 +105,24 @@ const Buy: NextPage = () => {
       setShowSuccessMessage(false);
     }
   }, [isSuccess, isError]);
+
+  const { data, loading, error: queryError } = useQuery(GET_UNSOLD_NFTS, {
+    client: auctionAlphaClient,
+    pollInterval: 5000,
+  })
+
+  const unsoldNFTsListed = data?.unsoldNFTListeds ?? [];
+  const unsoldNFTsDelisted = new Set(data?.unsoldNFTDelisteds?.map((nft: DelistedNFT) => nft.tokenId.toString()) ?? []);
+
+  const unsoldNFTs = unsoldNFTsListed.filter((nft: UnsoldNFT) => !unsoldNFTsDelisted.has(nft.tokenId.toString()));
+
+  if (loading) {
+    return <div className="text-center text-white my-8">Loading Unsold NFTs...</div>;
+  }
+
+  if (queryError) {
+    return <div className="text-center text-white my-8">{queryError.message}</div>;
+  }
 
   return (
     <>
@@ -157,7 +186,7 @@ const Buy: NextPage = () => {
                         <p className="text-lg sm:text-xl">Transaction failed. Please try again.</p>
                       </div>
                       <p className="text-lg sm:text-xl text-wrap text-center">
-                        Error message: {error?.message || "Unknown error"}
+                        Error message: {writeContractError?.message || "Unknown error"}
                       </p>
                       <div className="flex justify-center gap-4 mt-3 mb-3">
                         <div className="relative inline-flex group">
@@ -177,7 +206,7 @@ const Buy: NextPage = () => {
             </div>
           )}
 
-          {unsoldNFTArray?.length == 0 ? (
+          {unsoldNFTs?.length == 0 ? (
             <div className="flex flex-col items-center justify-center h-[50vh] w-screen">
               <div className="text-center text-white my-8">No unsold NFTs available</div>
               <div className="relative inline-flex group">
@@ -208,7 +237,7 @@ const Buy: NextPage = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 px-[108px] gap-x-4 gap-y-10 mt-8 w-screen">
-              {unsoldNFTArray?.map(item => (
+              {unsoldNFTs?.map((item: UnsoldNFT) => (
                 <div className="flex flex-col items-center" key={item.tokenId}>
                   <UnsoldNFTImage tokenURI={`${baseURI}/${item.tokenId}.json`} />
                   <div className="flex items-center justify-between space-y-4 gap-4 w-[250px]">
@@ -217,30 +246,30 @@ const Buy: NextPage = () => {
                         <NFTName tokenURI={`${baseURI}/${item.tokenId}.json`} />
                       </p>
                       <span className="text-lg tracking-wide font-bold text-lightPurple">
-                        {formatEther(item.sellingPrice)} ETH
+                        {formatEther(item.price)} ETH
                       </span>
                     </div>
                     <div className="relative inline-flex group">
                       <div
                         className={clsx(
                           "absolute rounded-xl blur-lg z-0 transition-all",
-                          availableFunds >= item.sellingPrice
+                          availableFunds >= item.price
                             ? "opacity-70 -inset-px bg-gradient-to-r from-darkPurpleAlt via-darkPink to-darkPurpleAlt group-hover:opacity-100 group-hover:-inset-1 duration-500 animate-tilt"
                             : "opacity-0",
                         )}
                       ></div>
 
                       <button
-                        title={availableFunds < item.sellingPrice ? "Insufficient funds" : "Buy"}
+                        title={availableFunds < item.price ? "Insufficient funds" : "Buy"}
                         className={clsx(
                           "relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl outline-none z-10 active:bg-gray-700",
                           {
-                            "opacity-50 cursor-not-allowed": availableFunds < item.sellingPrice,
-                            "hover:bg-gray-800 hover:scale-105": availableFunds >= item.sellingPrice,
+                            "opacity-50 cursor-not-allowed": availableFunds < item.price,
+                            "hover:bg-gray-800 hover:scale-105": availableFunds >= item.price,
                           },
                         )}
-                        disabled={availableFunds < item.sellingPrice}
-                        onClick={() => handleBuyButtonClick(item.sellingPrice, item.tokenId)}
+                        disabled={availableFunds < item.price}
+                        onClick={() => handleBuyButtonClick(item.price, item.tokenId)}
                       >
                         Buy
                       </button>

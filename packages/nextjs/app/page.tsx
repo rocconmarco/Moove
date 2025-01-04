@@ -108,13 +108,13 @@ const Home: NextPage = () => {
             <div className="flex flex-col items-center">
               <img src="/discord.jpg" alt="Discord" className={`${styles.icons} opacity-0`} />
               <div className="flex items-center justify-center mt-2 space-x-2">
-                <button className={`${styles.buttons} text-white font-bold py-2 opacity-0`}>Open Discord</button>
+                <button className={`${styles.buttons} btn btn-primary btn-sm mt-1`}>Open Discord</button>
               </div>
             </div>
             <div className="flex flex-col items-center">
               <img src="/moove-app.png" alt="Discord" className={`${styles.icons} opacity-0`} />
               <div className="flex items-center justify-center mt-2 space-x-2">
-                <button className={`${styles.buttons} text-white font-bold py-2 opacity-0`}>Download the app</button>
+                <button className={`${styles.buttons} btn btn-primary btn-sm mt-1`}>Download the app</button>
               </div>
             </div>
           </div>

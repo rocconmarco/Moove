@@ -1,24 +1,27 @@
 import React from "react";
 import { useEffect } from "react";
 import { formatEther } from "viem";
-import { useReadContract } from "wagmi";
-import { auctionAlphaContract } from "~~/contracts/contractsInfo";
+import { useQuery } from "@apollo/client";
+import { GET_BIDS } from "~~/utils/queries/auctionAlpha";
+import { auctionAlphaClient } from "~~/utils/client/apollo-clients";
 
 interface Bid {
+  id: string;
   bidder: string;
-  amount: bigint;
-  timestamp: bigint;
+  auctionId: bigint;
+  bidAmount: bigint;
+  blockNumber: bigint;
+  blockTimestamp: bigint;
+  transactionHash: string;
 }
 
 const StyledTable: React.FC<{ auctionId: bigint }> = ({ auctionId }) => {
-  const { data: bidsArray, isLoading } = useReadContract({
-    ...auctionAlphaContract,
-    functionName: "getListOfBids",
-    args: [auctionId],
-    query: {
-      refetchInterval: 5000,
-    },
-  });
+
+  const { data, loading, error } = useQuery(GET_BIDS, {
+    client: auctionAlphaClient,
+    variables: { auctionId: auctionId.toString() },
+    pollInterval: 5000,
+  })
 
   useEffect(() => {
     const handleResize = () => {
@@ -39,11 +42,15 @@ const StyledTable: React.FC<{ auctionId: bigint }> = ({ auctionId }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  if (isLoading) {
+  if (loading) {
     return <div className="text-center text-white my-8">Loading bid history...</div>;
   }
 
-  if (!bidsArray || bidsArray.length === 0) {
+  if (error) {
+    return <div className="text-center text-white my-8">{error.message}</div>;
+  }
+
+  if (!data || data.bidPlaceds.length === 0) {
     return <div className="text-center text-white my-8">No bids have been placed yet</div>;
   }
 
@@ -83,16 +90,16 @@ const StyledTable: React.FC<{ auctionId: bigint }> = ({ auctionId }) => {
         <div className="tbl-content h-[300px] overflow-x-auto border border-white/30">
           <table className="w-full table-fixed">
             <tbody>
-              {[...bidsArray].reverse().map((bid: Bid, index: number) => (
+              {data.bidPlaceds.map((bid: Bid, index: number) => (
                 <tr key={index}>
                   <td className="px-4 py-4 text-left align-middle font-light text-xs text-white border-b border-white/10">
                     {formatAddress(bid.bidder)}
                   </td>
                   <td className="px-4 py-4 text-left align-middle font-light text-xs text-white border-b border-white/10">
-                    {formatEther(bid.amount)} ETH
+                    {formatEther(bid.bidAmount)} ETH
                   </td>
                   <td className="px-4 py-4 text-left align-middle font-light text-xs text-white border-b border-white/10">
-                    {formatTimestamp(bid.timestamp)}
+                    {formatTimestamp(bid.blockTimestamp)}
                   </td>
                 </tr>
               ))}

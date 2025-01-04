@@ -1,0 +1,44 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: MooveNFT
+    network: sepolia
+    source:
+      address: "0xbF55B5F7D70015C99e6e6E04F32f4693881ede55"
+      abi: MooveNFT
+      startBlock: 7405603
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Approval
+        - ApprovalForAll
+        - AuthorizedMinterAdded
+        - AuthorizedMinterRemoved
+        - NFTMinted
+        - OwnershipTransferred
+        - Transfer
+      abis:
+        - name: MooveNFT
+          file: ./abis/MooveNFT.json
+      eventHandlers:
+        - event: Approval(indexed address,indexed address,indexed uint256)
+          handler: handleApproval
+        - event: ApprovalForAll(indexed address,indexed address,bool)
+          handler: handleApprovalForAll
+        - event: AuthorizedMinterAdded(indexed address)
+          handler: handleAuthorizedMinterAdded
+        - event: AuthorizedMinterRemoved(indexed address)
+          handler: handleAuthorizedMinterRemoved
+        - event: NFTMinted(indexed address,indexed uint256)
+          handler: handleNFTMinted
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
+      file: ./src/moove-nft.ts

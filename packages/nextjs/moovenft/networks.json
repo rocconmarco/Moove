@@ -1,0 +1,8 @@
+{
+  "sepolia": {
+    "MooveNFT": {
+      "address": "0xbF55B5F7D70015C99e6e6E04F32f4693881ede55",
+      "startBlock": 7405603
+    }
+  }
+}

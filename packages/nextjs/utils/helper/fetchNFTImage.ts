@@ -1,4 +1,4 @@
-export const fetchNFTMetadata = async (tokenURI: string): Promise<string> => {
+export const fetchNFTImage = async (tokenURI: string): Promise<string> => {
     if (!tokenURI || !tokenURI.startsWith("ipfs://")) {
       return "/nft-placeholder.jpg";
     }

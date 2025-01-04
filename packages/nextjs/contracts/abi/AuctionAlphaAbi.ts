@@ -90,25 +90,6 @@ export const AuctionAlphaAbi = [
   },
   {
     type: "function",
-    name: "getArrayIndexOfUnsoldNFT",
-    inputs: [
-      {
-        name: "tokenId",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
-    outputs: [
-      {
-        name: "",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
     name: "getAuctionById",
     inputs: [
       {
@@ -189,42 +170,6 @@ export const AuctionAlphaAbi = [
   },
   {
     type: "function",
-    name: "getListOfBids",
-    inputs: [
-      {
-        name: "auctionId",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
-    outputs: [
-      {
-        name: "",
-        type: "tuple[]",
-        internalType: "struct AuctionAlpha.Bid[]",
-        components: [
-          {
-            name: "bidder",
-            type: "address",
-            internalType: "address",
-          },
-          {
-            name: "amount",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "timestamp",
-            type: "uint256",
-            internalType: "uint256",
-          },
-        ],
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
     name: "getUnsoldNFTPrice",
     inputs: [
       {
@@ -233,44 +178,6 @@ export const AuctionAlphaAbi = [
         internalType: "uint256",
       },
     ],
-    outputs: [
-      {
-        name: "",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "getUnsoldNFTsArray",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "tuple[]",
-        internalType: "struct AuctionAlpha.UnsoldNFT[]",
-        components: [
-          {
-            name: "tokenId",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "sellingPrice",
-            type: "uint256",
-            internalType: "uint256",
-          },
-        ],
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "getUnsoldNFTsArrayLength",
-    inputs: [],
     outputs: [
       {
         name: "",
@@ -421,40 +328,6 @@ export const AuctionAlphaAbi = [
   },
   {
     type: "function",
-    name: "s_bidHistory",
-    inputs: [
-      {
-        name: "auctionId",
-        type: "uint256",
-        internalType: "uint256",
-      },
-      {
-        name: "",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
-    outputs: [
-      {
-        name: "bidder",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "amount",
-        type: "uint256",
-        internalType: "uint256",
-      },
-      {
-        name: "timestamp",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
     name: "s_currentAuctionId",
     inputs: [],
     outputs: [
@@ -536,30 +409,6 @@ export const AuctionAlphaAbi = [
     outputs: [
       {
         name: "highestBid",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "s_listOfUnsoldNFTs",
-    inputs: [
-      {
-        name: "",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
-    outputs: [
-      {
-        name: "tokenId",
-        type: "uint256",
-        internalType: "uint256",
-      },
-      {
-        name: "sellingPrice",
         type: "uint256",
         internalType: "uint256",
       },
@@ -740,7 +589,7 @@ export const AuctionAlphaAbi = [
       {
         name: "bidAmount",
         type: "uint256",
-        indexed: false,
+        indexed: true,
         internalType: "uint256",
       },
     ],
@@ -767,10 +616,29 @@ export const AuctionAlphaAbi = [
   },
   {
     type: "event",
+    name: "UnsoldNFTDelisted",
+    inputs: [
+      {
+        name: "tokenId",
+        type: "uint256",
+        indexed: true,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
     name: "UnsoldNFTListed",
     inputs: [
       {
         name: "tokenId",
+        type: "uint256",
+        indexed: true,
+        internalType: "uint256",
+      },
+      {
+        name: "price",
         type: "uint256",
         indexed: true,
         internalType: "uint256",

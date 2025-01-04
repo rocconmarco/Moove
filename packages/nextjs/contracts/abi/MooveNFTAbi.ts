@@ -7,6 +7,11 @@ export const MooveNFTAbi = [
         type: "string",
         internalType: "string",
       },
+      {
+        name: "maxSupply",
+        type: "uint256",
+        internalType: "uint256",
+      },
     ],
     stateMutability: "nonpayable",
   },
@@ -107,25 +112,6 @@ export const MooveNFTAbi = [
         name: "",
         type: "uint256",
         internalType: "uint256",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "getOwnedNFTsArray",
-    inputs: [
-      {
-        name: "user",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [
-      {
-        name: "",
-        type: "uint256[]",
-        internalType: "uint256[]",
       },
     ],
     stateMutability: "view",
@@ -470,6 +456,32 @@ export const MooveNFTAbi = [
         type: "bool",
         indexed: false,
         internalType: "bool",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "AuthorizedMinterAdded",
+    inputs: [
+      {
+        name: "minter",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "AuthorizedMinterRemoved",
+    inputs: [
+      {
+        name: "formerMinter",
+        type: "address",
+        indexed: true,
+        internalType: "address",
       },
     ],
     anonymous: false,

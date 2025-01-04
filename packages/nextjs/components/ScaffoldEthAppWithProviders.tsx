@@ -1,6 +1,8 @@
 "use client";
 
+import { auctionAlphaClient, mooveNFTClient } from "../utils/client/apollo-clients";
 import { StarryBackground } from "./StarryBackground";
+import { ApolloProvider } from "@apollo/client";
 import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppProgressBar as ProgressBar } from "next-nprogress-bar";
@@ -47,7 +49,11 @@ export const ScaffoldEthAppWithProviders = ({ children }: { children: React.Reac
             accentColor: "#e885ff",
           })}
         >
-          <ScaffoldEthApp>{children}</ScaffoldEthApp>
+          <ApolloProvider client={auctionAlphaClient}>
+            <ApolloProvider client={mooveNFTClient}>
+              <ScaffoldEthApp>{children}</ScaffoldEthApp>
+            </ApolloProvider>
+          </ApolloProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

@@ -23,7 +23,7 @@ export const Footer = () => {
             <div>
               <div className="flex justify-center items-center gap-2 text-sm w-full">
                 <div className="flex justify-center items-center gap-2">
-                  <p className="m-0 text-center">© 2024 Marco Roccon. All rights reserved.</p>
+                  <p className="m-0 text-center">© 2025 Marco Roccon. All rights reserved.</p>
                 </div>
               </div>
             </div>

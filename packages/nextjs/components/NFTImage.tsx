@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import styles from "./NFTImage.module.css";
-import { fetchNFTMetadata } from "~~/utils/scaffold-eth/helper/fetchNFTMetadata";
+import { fetchNFTImage } from "~~/utils/helper/fetchNFTImage";
 
 const NFTImage = ({ tokenURI }: { tokenURI: string }) => {
   const [NFTImage, setNFTImage] = useState<string>("/nft-placeholder.jpg");
 
   useEffect(() => {
     const loadNFTImage = async () => {
-      const image = await fetchNFTMetadata(tokenURI);
+      const image = await fetchNFTImage(tokenURI);
       setNFTImage(image);
     };
 
