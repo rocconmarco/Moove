@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useQuery } from "@apollo/client";
 import clsx from "clsx";
 import type { NextPage } from "next";
 import { formatEther } from "viem";
@@ -10,10 +11,9 @@ import { CheckCircleIcon, ExclamationCircleIcon } from "@heroicons/react/24/outl
 import NFTName from "~~/components/NFTName";
 import UnsoldNFTImage from "~~/components/UnsoldNFTImage";
 import { auctionAlphaContract } from "~~/contracts/contractsInfo";
-import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
-import { useQuery } from "@apollo/client";
-import { GET_UNSOLD_NFTS } from "~~/utils/queries/auctionAlpha";
 import { auctionAlphaClient } from "~~/utils/client/apollo-clients";
+import { GET_UNSOLD_NFTS } from "~~/utils/queries/auctionAlpha";
+import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
 
 interface UnsoldNFT {
   id: string;
@@ -106,10 +106,14 @@ const Buy: NextPage = () => {
     }
   }, [isSuccess, isError]);
 
-  const { data, loading, error: queryError } = useQuery(GET_UNSOLD_NFTS, {
+  const {
+    data,
+    loading,
+    error: queryError,
+  } = useQuery(GET_UNSOLD_NFTS, {
     client: auctionAlphaClient,
     pollInterval: 5000,
-  })
+  });
 
   const unsoldNFTsListed = data?.unsoldNFTListeds ?? [];
   const unsoldNFTsDelisted = new Set(data?.unsoldNFTDelisteds?.map((nft: DelistedNFT) => nft.tokenId.toString()) ?? []);
@@ -117,11 +121,39 @@ const Buy: NextPage = () => {
   const unsoldNFTs = unsoldNFTsListed.filter((nft: UnsoldNFT) => !unsoldNFTsDelisted.has(nft.tokenId.toString()));
 
   if (loading) {
-    return <div className="text-center text-white my-8">Loading Unsold NFTs...</div>;
+    return (
+      <div className="relative min-h-screen w-full">
+        <div className="relative z-10 flex flex-col items-center justify-center w-screen flex-grow pt-8 px-40">
+          <div className="flex flex-col items-center justify-center space-y-0 w-[100vw]">
+            <h1 className="text-3xl font-bold">Unsold NFTs</h1>
+            <p className="px-8 text-center">
+              List of NFTs that received no offers in past auctions and are now available at their starting price.
+            </p>
+          </div>
+          <div className="flex flex-col items-center justify-center h-[50vh] w-screen">
+            <div className="text-center text-white my-8">Loading Unsold NFTs...</div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (queryError) {
-    return <div className="text-center text-white my-8">{queryError.message}</div>;
+    return (
+      <div className="relative min-h-screen w-full">
+        <div className="relative z-10 flex flex-col items-center justify-center w-screen flex-grow pt-8 px-40">
+          <div className="flex flex-col items-center justify-center space-y-0 w-[100vw]">
+            <h1 className="text-3xl font-bold">Unsold NFTs</h1>
+            <p className="px-8 text-center">
+              List of NFTs that received no offers in past auctions and are now available at their starting price.
+            </p>
+          </div>
+          <div className="flex flex-col items-center justify-center h-[50vh] w-screen">
+            <div className="text-center text-white my-8">{queryError.message}</div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

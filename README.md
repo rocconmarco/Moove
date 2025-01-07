@@ -14,7 +14,26 @@
   </p>
 </div>
 
-## About The Project
+# Table of contents
+- [About The Project](#about-the-project)
+- [How to run the project locally](#how-to-run-the-project-locally)
+  - [Start local development server](#start-local-development-server)
+  - [Test smart contracts](#test-smart-contracts)
+- [Specs for nerds](#specs-for-nerds)
+  - [Smart Contracts](#smart-contracts)
+    - [1. MooveNFT](#1-moovenft)
+    - [2. AuctionAlpha](#2-auctionalpha)
+  - [Front end](#front-end)
+  - [Gas efficiency](#gas-efficiency)
+  - [Automation](#automation)
+  - [After the minting](#after-the-minting)
+- [Further development](#further-development)
+- [Contacts](#contacts)
+- [Copyright](#copyright)
+
+<br>
+
+# About The Project
 
 **MOOVE** is a blockchain-based auction platform and NFT marketplace created by **Marco Roccon** as part of the final project for the **Master in Blockchain Development** at **start2impact University**.
 
@@ -34,7 +53,54 @@ This project has been a tough challenge, but through perseverance, I turned ever
 
 <br>
 
-## Specs for nerds
+# How to run the project locally
+
+## Start local development server
+
+1- Clone the repository
+```
+git clone https://github.com/rocconmarco/Moove.git
+```
+
+2- Navigate to the project folder
+```
+cd Moove
+```
+
+3- Install the dependencies
+```
+yarn install
+```
+
+4- Set up your `packages/nextjs/.env.local` file<br>
+In order to run the project locally, you will need to provide the following environment variables
+- NEXT_PUBLIC_ALCHEMY_API_KEY: sign up for Alchemy and generate your API key on https://www.alchemy.com/
+- NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: create your project on https://www.reown.com and copy the project ID
+
+5- Run your local development server
+```
+cd packages/nextjs
+yarn start
+```
+
+## Test smart contracts
+
+To run the test suite for smart contracts, make sure to have Foundry installed on your device.<br>
+Refer to the official guide for more instructions on the installation: https://book.getfoundry.sh/getting-started/installation
+
+1- Navigate to the `packages/foundry` folder
+```
+cd packages/foundry
+```
+
+2- Run the test suite
+```
+forge test
+```
+
+<br>
+
+# Specs for nerds
 
 The project was built using ScaffoldETH-2, a web3 framework that provides the foundational structure for developing and testing dApps.
 
@@ -45,8 +111,8 @@ It leverages Next.js as the JavaScript framework for the front end, while Foundr
 
 At its core, **MOOVE** is entirely powered by two smart contracts deployed on the Sepolia testnet: **MooveNFT** and **AuctionAlpha**.
 
-- MooveNFT: **0x11eAF27a2Ec15FdE8E9c3f5208c7F71dF1C5c111**
-- AuctionAlpha: **0x3AA8c544CBFb5f562688fb6A746D174Ad2e99ABA**
+- MooveNFT: **0xbF55B5F7D70015C99e6e6E04F32f4693881ede55**
+- AuctionAlpha: **0x02D9b78795c95fc10C0a5a63E92607bb8AD4f8e9**
 
 ### 1. MooveNFT
 This contract manages the minting process for the NFT collection.  
@@ -105,15 +171,17 @@ Once a user successfully obtains an NFT—either by winning an auction or purcha
 - In their **web3 wallet**.  
 
 Users can also transfer ownership of their NFTs directly from their wallets.  
-To facilitate this, the **MooveNFT** contract extends the ERC721 `transferFrom` function by implementing an `_updateOwnership` internal function, ensuring the **“MyNFTs”** page reflects the correct ownership.
+The **“MyNFTs”** page always reflects the NFTs owned by the user, even after one or more NFTs are transferred to another user, thanks to the tracking of the `Transfer` event emitted by the **MooveNFT** contract via **TheGraph**.
 
-## Further development
+<br>
+
+# Further development
 
 If you discover a bug or have questions, feel free to reach out via **Telegram** or through the **contact section** of my portfolio website.
 
 <br>
 
-## Contacts
+# Contacts
 
 **Marco Roccon - Digital Innovation & Development**<br>
 Portfolio website: https://rocconmarco.github.io/<br>
@@ -125,6 +193,6 @@ Project Link: https://moove-bay.vercel.app/
 
 <br>
 
-## Copyright
+# Copyright
 
-© 2024 Marco Roccon. All rights reserved.
+© 2025 Marco Roccon. All rights reserved.
