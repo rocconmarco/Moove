@@ -96,8 +96,8 @@ const getName = (index: PossibleIndexes) => {
   const name = names[index - 1];
   return {
     display: name.charAt(0).toUpperCase() + name.slice(1),
-    fileName: name
-  } 
+    fileName: name,
+  };
 };
 
 const getRotation = (index: PossibleIndexes) => {

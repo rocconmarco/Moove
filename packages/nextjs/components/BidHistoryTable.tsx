@@ -1,9 +1,9 @@
 import React from "react";
 import { useEffect } from "react";
-import { formatEther } from "viem";
 import { useQuery } from "@apollo/client";
-import { GET_BIDS } from "~~/utils/queries/auctionAlpha";
+import { formatEther } from "viem";
 import { auctionAlphaClient } from "~~/utils/client/apollo-clients";
+import { GET_BIDS } from "~~/utils/queries/auctionAlpha";
 
 interface Bid {
   id: string;
@@ -16,12 +16,11 @@ interface Bid {
 }
 
 const StyledTable: React.FC<{ auctionId: bigint }> = ({ auctionId }) => {
-
   const { data, loading, error } = useQuery(GET_BIDS, {
     client: auctionAlphaClient,
     variables: { auctionId: auctionId.toString() },
     pollInterval: 5000,
-  })
+  });
 
   useEffect(() => {
     const handleResize = () => {

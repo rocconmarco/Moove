@@ -12,7 +12,7 @@ const UnsoldNFTImage = ({ tokenURI }: { tokenURI: string }) => {
     };
 
     loadNFTImage();
-  }, [tokenURI])
+  }, [tokenURI]);
 
   return (
     <div className={styles.nftWrapper}>
