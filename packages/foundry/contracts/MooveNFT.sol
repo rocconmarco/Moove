@@ -7,7 +7,6 @@ import { IMintableNFT } from "./IMintableNFT.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-
 /**
  * A smart contract that manages the minting process of MooveNFT
  * @author Marco Roccon
@@ -16,7 +15,6 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
  * @dev the required functions, which are mint, safeMint and getMaxSupply
  */
 contract MooveNFT is ERC721, IMintableNFT, Ownable {
-
   error MooveNFT__MintingNotAuthorized();
   error MooveNFT__MintingNonExistingToken();
   error MooveNFT__NotAValidAddress();
@@ -34,8 +32,8 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
    * @dev Ideally, only the AuctionAlpha address should be authorized
    * @dev This mapping is created because of the impossibility to pass the AuctionAlpha address while deploying
    * @dev since the AuctionAlpha contract also needs MooveNFT's address to be correctly deployed
-   */ 
-  mapping (address => bool) private s_authorizedMinters;
+   */
+  mapping(address => bool) private s_authorizedMinters;
 
   /**
    * @param baseURI the base URI for Moove NFTs' metadata stored in IPFS, the format of the string should be ipfs://<CID>
@@ -43,7 +41,10 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
    * The ERC721 token is inizialized with the name "MooveNFT" and with the symbol "MOOVE"
    * The owner of the contract is set to be the sender of the deployment transaction
    */
-  constructor(string memory baseURI, uint256 maxSupply) ERC721("MooveNFT", "MOOVE") Ownable(msg.sender) {
+  constructor(
+    string memory baseURI,
+    uint256 maxSupply
+  ) ERC721("MooveNFT", "MOOVE") Ownable(msg.sender) {
     s_baseURI = baseURI;
     s_tokenCounter = 0;
     s_maxSupply = maxSupply;
@@ -57,13 +58,13 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
    * @dev If minted successfully, the token counter will increment
    */
   function mint(address to, uint256 tokenId) external {
-    if(to == address(0)) {
+    if (to == address(0)) {
       revert MooveNFT__NotAValidAddress();
     }
-    if(tokenId == 0 || tokenId > s_maxSupply) {
+    if (tokenId == 0 || tokenId > s_maxSupply) {
       revert MooveNFT__MintingNonExistingToken();
     }
-    if(s_authorizedMinters[msg.sender]) {
+    if (s_authorizedMinters[msg.sender]) {
       _mint(to, tokenId);
       s_tokenCounter++;
       emit NFTMinted(to, tokenId);
@@ -82,13 +83,13 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
    * @dev We prefer to use safeMint to check the receiver's capability to accept NFTs
    */
   function safeMint(address to, uint256 tokenId) external {
-    if(to == address(0)) {
+    if (to == address(0)) {
       revert MooveNFT__NotAValidAddress();
     }
-    if(tokenId == 0 || tokenId > s_maxSupply) {
+    if (tokenId == 0 || tokenId > s_maxSupply) {
       revert MooveNFT__MintingNonExistingToken();
     }
-    if(s_authorizedMinters[msg.sender]) {
+    if (s_authorizedMinters[msg.sender]) {
       _safeMint(to, tokenId);
       s_tokenCounter++;
       emit NFTMinted(to, tokenId);
@@ -103,8 +104,10 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
    * @dev to a particular address
    * @dev It updates the mapping of authorized minters
    */
-  function addAuthorizedMinter(address minter) public onlyOwner {
-    if(minter == address(0)) {
+  function addAuthorizedMinter(
+    address minter
+  ) public onlyOwner {
+    if (minter == address(0)) {
       revert MooveNFT__NotAValidAddress();
     }
     s_authorizedMinters[minter] = true;
@@ -117,20 +120,28 @@ contract MooveNFT is ERC721, IMintableNFT, Ownable {
    * @dev over the NFT collection for a particular address
    * @dev It updates the mapping of authorized minters
    */
-  function removeAuthorizedMinter(address minter) public onlyOwner {
+  function removeAuthorizedMinter(
+    address minter
+  ) public onlyOwner {
     s_authorizedMinters[minter] = false;
     emit AuthorizedMinterRemoved(minter);
   }
 
-  function getMaxSupply() public view returns(uint256) {
+  function getMaxSupply() public view returns (uint256) {
     return s_maxSupply;
   }
 
-  function tokenURI(uint256 tokenId) public view override returns(string memory) {
-    return string(abi.encodePacked(s_baseURI, '/', Strings.toString(tokenId), '.json'));
+  function tokenURI(
+    uint256 tokenId
+  ) public view override returns (string memory) {
+    return string(
+      abi.encodePacked(s_baseURI, "/", Strings.toString(tokenId), ".json")
+    );
   }
 
-  function checkIfAuthorizedMinter(address minter) public view returns(bool) {
+  function checkIfAuthorizedMinter(
+    address minter
+  ) public view returns (bool) {
     return s_authorizedMinters[minter];
   }
 }

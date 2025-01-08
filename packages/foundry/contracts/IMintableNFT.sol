@@ -8,17 +8,21 @@ import { IERC721 } from "@openzeppelin/contracts/interfaces/IERC721.sol";
  * @author Marco Roccon
  */
 interface IMintableNFT is IERC721 {
-    event NFTMinted(address indexed to, uint256 indexed tokenId);
-    event AuthorizedMinterAdded(address indexed minter);
-    event AuthorizedMinterRemoved(address indexed formerMinter);
+  event NFTMinted(address indexed to, uint256 indexed tokenId);
+  event AuthorizedMinterAdded(address indexed minter);
+  event AuthorizedMinterRemoved(address indexed formerMinter);
 
-    function mint(address to, uint256 tokenId) external;
+  function mint(address to, uint256 tokenId) external;
 
-    function safeMint(address to, uint256 tokenId) external;
+  function safeMint(address to, uint256 tokenId) external;
 
-    function addAuthorizedMinter(address minter) external;
+  function addAuthorizedMinter(
+    address minter
+  ) external;
 
-    function removeAuthorizedMinter(address minter) external;
-    
-    function getMaxSupply() external view returns(uint256);
+  function removeAuthorizedMinter(
+    address minter
+  ) external;
+
+  function getMaxSupply() external view returns (uint256);
 }

@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { useQuery } from "@apollo/client";
 import type { NextPage } from "next";
-import { useAccount, useReadContract } from "wagmi";
+import { useAccount } from "wagmi";
 import MyNFTImage from "~~/components/MyNFTImage";
 import NFTName from "~~/components/NFTName";
-import { mooveNFTContract } from "~~/contracts/contractsInfo";
 import { mooveNFTClient } from "~~/utils/client/apollo-clients";
 import { GET_NFTS_RECEIVED, GET_NFTS_SENT } from "~~/utils/queries/mooveNFT";
 import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
