@@ -813,15 +813,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphprotocol/graph-ts@npm:^0.36.0":
-  version: 0.36.0
-  resolution: "@graphprotocol/graph-ts@npm:0.36.0"
-  dependencies:
-    assemblyscript: 0.19.10
-  checksum: 93eac159b47e725f8c2b1a3f2f9f65d3032873010e56c7030fe8e46101370f6b786007b212906df965a5900ebb689467dbfb0c528ae29b9c0857a3bad8ff98dd
-  languageName: node
-  linkType: hard
-
 "@graphql-typed-document-node/core@npm:^3.1.1":
   version: 3.2.0
   resolution: "@graphql-typed-document-node/core@npm:3.2.0"
@@ -1247,7 +1238,6 @@ __metadata:
     "@fortawesome/fontawesome-svg-core": ^6.7.1
     "@fortawesome/free-solid-svg-icons": ^6.7.1
     "@fortawesome/react-fontawesome": ^0.2.2
-    "@graphprotocol/graph-ts": ^0.36.0
     "@heroicons/react": ~2.1.5
     "@rainbow-me/rainbowkit": 2.1.6
     "@tanstack/react-query": ~5.28.6
@@ -1258,7 +1248,6 @@ __metadata:
     "@uniswap/sdk-core": ~4.0.1
     "@uniswap/v2-sdk": ~3.0.1
     abitype: 1.0.6
-    assemblyscript: ^0.27.31
     autoprefixer: ~10.4.20
     blo: ~1.0.1
     burner-connector: ~0.0.8
@@ -3567,32 +3556,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"assemblyscript@npm:0.19.10":
-  version: 0.19.10
-  resolution: "assemblyscript@npm:0.19.10"
-  dependencies:
-    binaryen: 101.0.0-nightly.20210723
-    long: ^4.0.0
-  bin:
-    asc: bin/asc
-    asinit: bin/asinit
-  checksum: d4087bcbae402eb0e972a78d8dfee607b2b51f4b29fcee5359f4db3052912ec12492a8714916bed8424f7f495f9357c7c6ab2482ba1d4ea4a44c55a86df5a67c
-  languageName: node
-  linkType: hard
-
-"assemblyscript@npm:^0.27.31":
-  version: 0.27.31
-  resolution: "assemblyscript@npm:0.27.31"
-  dependencies:
-    binaryen: 116.0.0-nightly.20240114
-    long: ^5.2.1
-  bin:
-    asc: bin/asc.js
-    asinit: bin/asinit.js
-  checksum: 2cf42ffea525aba1ad1eb0964e1eea2ed131ce7ac0421966b3f601475f0cfa8be4911dacba62d42c6d8949ac74192a465020eb080271ec9e9a3a424a62e27197
-  languageName: node
-  linkType: hard
-
 "ast-types-flow@npm:^0.0.8":
   version: 0.0.8
   resolution: "ast-types-flow@npm:0.0.8"
@@ -3724,25 +3687,6 @@ __metadata:
   version: 2.3.0
   resolution: "binary-extensions@npm:2.3.0"
   checksum: bcad01494e8a9283abf18c1b967af65ee79b0c6a9e6fcfafebfe91dbe6e0fc7272bafb73389e198b310516ae04f7ad17d79aacf6cb4c0d5d5202a7e2e52c7d98
-  languageName: node
-  linkType: hard
-
-"binaryen@npm:101.0.0-nightly.20210723":
-  version: 101.0.0-nightly.20210723
-  resolution: "binaryen@npm:101.0.0-nightly.20210723"
-  bin:
-    wasm-opt: bin/wasm-opt
-  checksum: b1f7cc8e9fb4f1530e9454b5ea6deba17e2d863cea4efc6d0ba1b2af2325e9080c29df0ffeaf9708d455705a629a6a4fbef0ac29ed789a4e316b4c1437879f57
-  languageName: node
-  linkType: hard
-
-"binaryen@npm:116.0.0-nightly.20240114":
-  version: 116.0.0-nightly.20240114
-  resolution: "binaryen@npm:116.0.0-nightly.20240114"
-  bin:
-    wasm-opt: bin/wasm-opt
-    wasm2js: bin/wasm2js
-  checksum: 77b281347f25a84ba619abd4bd67a84cf761abef7da4d8b3c7a7937272527a95199b7aa2b45c2c127b9e356bde9d7a2521a02226060df9d01c51f0b42c4ff27c
   languageName: node
   linkType: hard
 
@@ -7789,20 +7733,6 @@ __metadata:
     slice-ansi: ^4.0.0
     wrap-ansi: ^6.2.0
   checksum: ae2f85bbabc1906034154fb7d4c4477c79b3e703d22d78adee8b3862fa913942772e7fa11713e3d96fb46de4e3cabefbf5d0a544344f03b58d3c4bff52aa9eb2
-  languageName: node
-  linkType: hard
-
-"long@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "long@npm:4.0.0"
-  checksum: 16afbe8f749c7c849db1f4de4e2e6a31ac6e617cead3bdc4f9605cb703cd20e1e9fc1a7baba674ffcca57d660a6e5b53a9e236d7b25a295d3855cca79cc06744
-  languageName: node
-  linkType: hard
-
-"long@npm:^5.2.1":
-  version: 5.2.3
-  resolution: "long@npm:5.2.3"
-  checksum: 885ede7c3de4facccbd2cacc6168bae3a02c3e836159ea4252c87b6e34d40af819824b2d4edce330bfb5c4d6e8ce3ec5864bdcf9473fa1f53a4f8225860e5897
   languageName: node
   linkType: hard
 
