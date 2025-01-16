@@ -174,7 +174,7 @@ const Buy: NextPage = () => {
                   ${
                     showSuccessMessage
                       ? "bg-gradient-to-t from-green-700 to-black text-white min-w-[90%] sm:min-w-[500px] max-w-[500px]"
-                      : "bg-gradient-to-t from-red-900 to-black text-white min-w-[350px] max-w-[350px] sm:min-w-[400px] sm:max-w-[400px]"
+                      : "bg-gradient-to-t from-red-900 to-black text-white min-w-[350px] max-w-[350px] sm:min-w-[420px] sm:max-w-[420px]"
                   }`}
               >
                 <div className="flex items-center">
@@ -182,7 +182,7 @@ const Buy: NextPage = () => {
                     <div className="flex flex-col items-center">
                       <div className="flex items-center gap-2">
                         <CheckCircleIcon className="my-0" color="white" width={30} height={30} />
-                        <p className="text-lg sm:text-xl">Transaction completed! 🎉</p>
+                        <p className="text-lg sm:text-xl font-bold">Transaction completed! 🎉</p>
                       </div>
                       <p className="text-lg sm:text-xl text-center text-pretty">
                         Congratulations, you are now the proud owner of a unique MOOVE NFT.
@@ -215,7 +215,7 @@ const Buy: NextPage = () => {
                     <div className="flex flex-col items-center">
                       <div className="flex items-center gap-2">
                         <ExclamationCircleIcon className="my-0" color="white" width={30} height={30} />
-                        <p className="text-lg sm:text-xl">Transaction failed. Please try again.</p>
+                        <p className="text-lg sm:text-xl font-bold">Transaction failed. Please try again.</p>
                       </div>
                       <p className="text-lg sm:text-xl text-wrap text-center">
                         Error message: {writeContractError?.message || "Unknown error"}

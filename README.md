@@ -27,6 +27,11 @@
   - [Gas efficiency](#gas-efficiency)
   - [Automation](#automation)
   - [After the minting](#after-the-minting)
+- [Updates (v1.1)](#updates-v11)
+  - [Reading events with TheGraph](#reading-events-with-thegraph)
+  - [Helper functions](#helper-functions)
+  - [Constructor and events](#constructor-and-events)
+  - [Graphic improvements](#graphic-improvements)
 - [Further development](#further-development)
 - [Contacts](#contacts)
 - [Copyright](#copyright)
@@ -172,6 +177,46 @@ Once a user successfully obtains an NFT—either by winning an auction or purcha
 
 Users can also transfer ownership of their NFTs directly from their wallets.  
 The **“MyNFTs”** page always reflects the NFTs owned by the user, even after one or more NFTs are transferred to another user, thanks to the tracking of the `Transfer` event emitted by the **MooveNFT** contract via **TheGraph**.
+
+<br>
+
+# Updates (v1.1)
+
+Version 1.1 of the project introduces several enhancements to improve the security and efficiency of the contracts, along with some updates to the front end.
+
+## Reading events with TheGraph
+
+Blockchain data is accessed using <a href="https://thegraph.com/" target="_blank">TheGraph</a>, a powerful tool for reading and organizing on-chain events.
+This approach eliminates redundant data structures, improving gas efficiency.
+
+TheGraph has been used in the following areas:
+- **MooveNFT**: NFTs ownership is inferred by tracking the `Transfer` event emitted by the standard ERC721 contract.
+- **AuctionAlpha**: the bid history for a particular auction is reconstructed by monitoring the BidPlaced event, while the unsold NFTs are tracked through of UnsoldNFTListed and UnsoldNFTDelisted events.
+
+## Helper functions
+
+The logic for transforming and fetching metadata from IPFS has been simplified and made more readable through the implementation of two helper functions available at `packages/nextjs/utils/helper`.
+- **fetchNFTImage.ts**
+- **fetchNFTName.ts**
+
+This implementation has an impact on the following components:
+- **NFTImage.tsx**
+- **NFTName.tsx**
+- **MyNFTImage.tsx**
+- **UnsoldNFTImage.tsx**
+
+Metadata is fetched whenever the `tokenURI` passed as a prop to the individual components is modified.
+
+## Constructor and events
+
+The `maxSupply` parameter has been added to the constructor of the **MooveNFT** contract to allow the owner to set the number of NFTs available in the collection at the time of deployment.
+<br>
+<br>
+The events `AuthorizedMinterAdded` and `AuthorizedMinterRemoved` have been added to the respective functions in the **MooveNFT** contract to track the permissions granted regarding NFT minting.
+
+## Graphic improvements
+
+The style of the **Open Discord** and **Download the app** buttons on the landing page has been modified to align with the overall style of the platform.
 
 <br>
 
