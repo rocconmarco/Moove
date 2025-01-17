@@ -218,7 +218,7 @@ const Buy: NextPage = () => {
                         <p className="text-lg sm:text-xl font-bold">Transaction failed. Please try again.</p>
                       </div>
                       <p className="text-lg sm:text-xl text-wrap text-center">
-                        Error message: {writeContractError?.message || "Unknown error"}
+                        Error message: {`${writeContractError?.message.split(".")[0]}.` || "Unknown error"}
                       </p>
                       <div className="flex justify-center gap-4 mt-3 mb-3">
                         <div className="relative inline-flex group">

@@ -185,21 +185,18 @@ const Auctions: NextPage = () => {
       setUserBid("");
       setBidError(null);
       setShowSuccessMessage(true);
+      setShowErrorMessage(false);
     }
-  }, [isSuccess]);
+    if (isError) {
+      setShowErrorMessage(true);
+      setShowSuccessMessage(false);
+    }
+  }, [isSuccess, isError]);
 
   useEffect(() => {
     const timeout = setTimeout(() => setShowAuctionCompletedMessage(true), 2000);
     return () => clearTimeout(timeout);
   });
-
-  useEffect(() => {
-    if (isError) {
-      setShowErrorMessage(true);
-      const timeout = setTimeout(() => setShowErrorMessage(false), 5000);
-      return () => clearTimeout(timeout);
-    }
-  }, [isError]);
 
   useEffect(() => {
     setBalance(userBalance ?? null);
@@ -417,7 +414,7 @@ const Auctions: NextPage = () => {
                                     <p className="text-lg sm:text-xl font-bold">Transaction failed. Please try again.</p>
                                   </div>
                                   <p className="text-lg sm:text-xl text-wrap text-center">
-                                    Error message: {error?.message || "Unknown error"}
+                                    Error message: {`${error?.message.split(".")[0]}.` || "Unknown error"}
                                   </p>
                                   <div className="flex justify-center gap-4 mt-3 mb-3">
                                     <div className="relative inline-flex group">

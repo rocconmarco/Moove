@@ -5,14 +5,16 @@ import clsx from "clsx";
 import type { NextPage } from "next";
 import { formatEther, parseEther } from "viem";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
-import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import { CheckCircleIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import { auctionAlphaContract } from "~~/contracts/contractsInfo";
 import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
+import Link from "next/link";
 
 const Withdraw: NextPage = () => {
   const [withdrawAmount, setWithdrawAmount] = useState<string>("");
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<boolean>(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
+  const [showErrorMessage, setShowErrorMessage] = useState<boolean>(false);
 
   const currentAccount = useAccount();
 
@@ -20,7 +22,7 @@ const Withdraw: NextPage = () => {
     setWithdrawAmount(formatEther(userBalance ?? 0n));
   };
 
-  const { writeContract, isSuccess } = useWriteContract();
+  const { writeContract, isSuccess, isError, error } = useWriteContract();
 
   const handleWithdraw = () => {
     writeContract({
@@ -105,22 +107,27 @@ const Withdraw: NextPage = () => {
     }
   };
 
-  useEffect(() => {
-    if (isSuccess) {
-      setWithdrawAmount("");
-      setWithdrawError(null);
-      setSuccessMessage(true);
-    }
-  }, [isSuccess]);
+  const handleCloseModal = () => {
+    setShowSuccessMessage(false);
+    setShowErrorMessage(false);
+  };
 
   useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => {
-        setSuccessMessage(false);
-      }, 5000);
-      return () => clearTimeout(timer);
+    document.body.style.overflow = showSuccessMessage || showErrorMessage ? "hidden" : "auto";
+  }, [showSuccessMessage, showErrorMessage]);
+
+  useEffect(() => {
+    if (isSuccess) {
+      setShowSuccessMessage(true);
+      setShowErrorMessage(false);
+      setWithdrawAmount("");
+      setWithdrawError(null);
     }
-  }, [successMessage]);
+    if (isError) {
+      setShowErrorMessage(true);
+      setShowSuccessMessage(false);
+    }
+  }, [isSuccess, isError]);
 
   return (
     <>
@@ -157,14 +164,73 @@ const Withdraw: NextPage = () => {
               </button>
             </div>
             {withdrawError && <p className="text-red-500 text-sm my-1">{withdrawError}</p>}
-            {isSuccess && successMessage && (
-              <div className="flex items-center space-x-2">
-                <div className="flex my-1">
-                  <p className="text-green-500 text-sm my-0 mr-1">Withdrawal successful</p>
-                  <CheckCircleIcon className="my-0" color="#22c55e" width={20} height={20} />
+            {(showSuccessMessage || showErrorMessage) && (
+            <div className="fixed inset-0 z-50 backdrop-blur-xl bg-black bg-opacity-0">
+              <div
+                className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 px-6 py-3 rounded-xl shadow-lg z-50 
+                  ${
+                    showSuccessMessage
+                      ? "bg-gradient-to-t from-green-700 to-black text-white min-w-[350px] max-w-[350px] sm:min-w-[440px] sm:max-w-[440px]"
+                      : "bg-gradient-to-t from-red-900 to-black text-white min-w-[350px] max-w-[350px] sm:min-w-[420px] sm:max-w-[420px]"
+                  }`}
+              >
+                <div className="flex items-center">
+                  {showSuccessMessage ? (
+                    <div className="flex flex-col items-center">
+                      <div className="flex items-center gap-2">
+                        <CheckCircleIcon className="my-0" color="white" width={30} height={30} />
+                        <p className="text-lg sm:text-xl font-bold">Withdrawal success! 🎉</p>
+                      </div>
+                      <p className="text-lg sm:text-xl text-center text-pretty">
+                        The page will automatically update in a few moments.
+                      </p>
+                      <div className="flex justify-center gap-4 mt-3 mb-3">
+                        <div className="relative inline-flex group">
+                          <Link
+                            title="Go to My NFTs"
+                            href="/auctions"
+                            className="relative inline-flex items-center justify-center px-8 py-4 text-sm sm:text-lg font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl outline-none z-10 active:bg-gray-700 hover:bg-gray-800 hover:scale-105"
+                          >
+                            Back to auctions
+                          </Link>
+                        </div>
+                        <div className="relative inline-flex group">
+                          <button
+                            title="Close"
+                            className="relative inline-flex items-center justify-center px-8 py-4 text-sm sm:text-lg font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl outline-none z-10 active:bg-gray-700 hover:bg-gray-800 hover:scale-105"
+                            onClick={handleCloseModal}
+                          >
+                            Close
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      <div className="flex items-center gap-2">
+                        <ExclamationCircleIcon className="my-0" color="white" width={30} height={30} />
+                        <p className="text-lg sm:text-xl font-bold">Transaction failed. Please try again.</p>
+                      </div>
+                      <p className="text-lg sm:text-xl text-wrap text-center">
+                        Error message: {`${error?.message.split(".")[0]}.` || "Unknown error"}
+                      </p>
+                      <div className="flex justify-center gap-4 mt-3 mb-3">
+                        <div className="relative inline-flex group">
+                          <button
+                            title="Close"
+                            className="relative inline-flex items-center justify-center px-8 py-4 text-sm sm:text-lg font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl outline-none z-10 active:bg-gray-700 hover:bg-gray-800 hover:scale-105"
+                            onClick={handleCloseModal}
+                          >
+                            Close
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
+            </div>
+          )}
             <div className="relative inline-flex group mt-6">
               <div
                 className={clsx(

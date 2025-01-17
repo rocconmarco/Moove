@@ -186,7 +186,7 @@ Version 1.1 of the project introduces several enhancements to improve the securi
 
 ## Reading events with TheGraph
 
-Blockchain data is accessed using <a href="https://thegraph.com/" target="_blank">TheGraph</a>, a powerful tool for reading and organizing on-chain events.
+Blockchain data is accessed using <a href="https://thegraph.com/">TheGraph</a>, a powerful tool for reading and organizing on-chain events.
 This approach eliminates redundant data structures, improving gas efficiency.
 
 TheGraph has been used in the following areas:
